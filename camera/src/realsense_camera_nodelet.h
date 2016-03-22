@@ -76,7 +76,7 @@ public:
 
   // Default Constants.
   const int MAX_Z = 8;	// in meters
-  const int DEFAULT_CAMERA = 0;	// default camera index
+  const int DEFAULT_CAMERA = 0;	// default camera index : 0=R200 1=SR300
   const std::string DEFAULT_MODE = "preset";
   const int DEPTH_HEIGHT = 360;
   const int DEPTH_WIDTH = 480;

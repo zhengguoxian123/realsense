@@ -163,6 +163,12 @@ namespace realsense_camera
       rs_enable_stream (rs_device_, RS_STREAM_DEPTH, depth_width_, depth_height_, DEPTH_FORMAT, depth_fps_, &rs_error_);
       checkError ();
     }
+    else if (mode_.compare ("close") == 0)
+    {
+      ROS_INFO_STREAM ("RealSense Camera - Enabling Depth Stream: close mode");
+      rs_enable_stream_preset (rs_device_, RS_STREAM_DEPTH, RS_PRESET_HIGHEST_FRAMERATE, &rs_error_);
+      checkError ();
+    }
     else
     {
       ROS_INFO_STREAM ("RealSense Camera - Enabling Depth Stream: preset mode");
@@ -185,6 +191,12 @@ namespace realsense_camera
       rs_enable_stream (rs_device_, RS_STREAM_INFRARED, depth_width_, depth_height_, IR1_FORMAT, depth_fps_, &rs_error_);
       checkError ();
     }
+    else if (mode_.compare ("close") == 0)
+    {
+      ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared Stream: close mode");
+      rs_enable_stream_preset (rs_device_, RS_STREAM_INFRARED, RS_PRESET_HIGHEST_FRAMERATE, &rs_error_);
+      checkError ();
+    }
     else
     {
       ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared Stream: preset mode");
@@ -205,6 +217,11 @@ namespace realsense_camera
     {
       ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared2 Stream: manual mode");
       rs_enable_stream (rs_device_, RS_STREAM_INFRARED2, depth_width_, depth_height_, IR2_FORMAT, depth_fps_, 0);
+    }
+    else if (mode_.compare ("close") == 0)
+    {
+      ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared2 Stream: close mode");
+      rs_enable_stream_preset (rs_device_, RS_STREAM_INFRARED2, RS_PRESET_HIGHEST_FRAMERATE, 0);
     }
     else
     {
@@ -353,7 +370,8 @@ namespace realsense_camera
     {
       enableDepthStream();
       enableInfraredStream();
-      enableInfrared2Stream();
+      if (camera_.find (R200) != std::string::npos)
+        enableInfrared2Stream();
     }
 
     getCameraOptions();
@@ -471,7 +489,7 @@ namespace realsense_camera
     camera_info_[stream_index]->R.at(8) = (double) 1;
 
     for (int i = 0; i < 5; i++)
-    camera_info_[stream_index]->D.push_back (0);
+      camera_info_[stream_index]->D.push_back(intrinsic.coeffs[i]);
   }
 
   /*
@@ -500,7 +518,10 @@ namespace realsense_camera
    */
   void RealsenseNodelet::setStreamOptions()
   {
-    pnh_.param("camera", camera_, (std::string) R200);
+    int camera_id = DEFAULT_CAMERA;
+    pnh_.param("camera", camera_id, DEFAULT_CAMERA);
+    camera_ = (camera_id==0)?"R200":"SR300";
+
     pnh_.param("mode", mode_, DEFAULT_MODE);
     pnh_.param("enable_depth", enable_depth_, ENABLE_DEPTH);
     pnh_.param("enable_color", enable_color_, ENABLE_COLOR);
@@ -657,7 +678,8 @@ namespace realsense_camera
 
       enableDepthStream();
       enableInfraredStream();
-      enableInfrared2Stream();
+      if (camera_.find (R200) != std::string::npos)
+        enableInfrared2Stream();
 
       if(rs_is_device_streaming(rs_device_, 0) == 0)
       {
