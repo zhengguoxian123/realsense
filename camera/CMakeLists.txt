@@ -43,8 +43,6 @@ generate_dynamic_reconfigure_options(
   cfg/camera_params.cfg
 )
 
-
-
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
@@ -75,13 +73,22 @@ target_link_libraries(realsense_camera_test_rgbd
 )
 add_dependencies(realsense_camera_test_rgbd realsense_camera_generate_messages_cpp)
 
-# Install launch files and other configuration files
+# Install nodelet library
+install(TARGETS realsense_camera_nodelet LIBRARY
+    DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+# Install launch files
 install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 )
+
+# Install rviz files
 install(DIRECTORY rviz/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz
 )
-install(FILES package.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+
+# Install xml files
+install(FILES package.xml realsense_camera_nodelet_plugins.xml
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
