@@ -51,6 +51,7 @@ add_library(realsense_camera_nodelet src/realsense_camera_nodelet.cpp)
 target_link_libraries(realsense_camera_nodelet
   ${catkin_LIBRARIES}
   /usr/local/lib/librealsense.so
+  -lpthread -lm
 )
 add_dependencies(realsense_camera_nodelet realsense_camera_generate_messages_cpp ${PROJECT_NAME}_gencfg)
 
@@ -58,6 +59,7 @@ add_executable(realsense_camera_test test/realsense_camera_test_node.cpp)
 target_link_libraries(realsense_camera_test
   ${catkin_LIBRARIES}
   ${GTEST_LIBRARIES}
+  -lpthread -lm
 )
 add_dependencies(realsense_camera_test realsense_camera_generate_messages_cpp ${PROJECT_NAME}_gencfg)
 
@@ -65,6 +67,7 @@ add_executable(realsense_camera_test_rgbd test/realsense_camera_test_rgbd_node.c
 target_link_libraries(realsense_camera_test_rgbd
   ${catkin_LIBRARIES}
   ${GTEST_LIBRARIES}
+  -lpthread -lm
 )
 add_dependencies(realsense_camera_test_rgbd realsense_camera_generate_messages_cpp)
 
