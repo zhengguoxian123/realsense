@@ -589,11 +589,8 @@ namespace realsense_camera
   {
     pnh_.getParam("serial_no", serial_no_);
     pnh_.param("camera", camera_, (std::string) R200);
-    int camera_id = DEFAULT_CAMERA;
-    pnh_.param("camera", camera_id, DEFAULT_CAMERA);
-    // TODO(ff): remove and do this using the parameter
-    std::cout << "camera_id: " << camera_id << std::endl;
-    if (camera_id == 0) {
+    pnh_.param("camera_type", camera_type_, DEFAULT_CAMERA_TYPE);
+    if (camera_type_ == 0) {
       camera_ = "R200";
     }
     else {
