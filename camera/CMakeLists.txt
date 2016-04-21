@@ -9,9 +9,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 set(CMAKE_CXX_FLAGS "-fPIE -fPIC -std=c++11 -O2 -D_FORTIFY_SOURCE=2 -fstack-protector -Wformat -Wformat-security -Wall ${CMAKE_CXX_FLAGS}")
 # Flags executables
-#set(CMAKE_EXE_LINKER_FLAGS "-pie noexecstack -z relro -z now")
+set(CMAKE_EXE_LINKER_FLAGS "-pie -z noexecstack -z relro -z now")
 # Flags shared libraries
-#set(CMAKE_SHARED_LINKER_FLAGS "-z noexecstack -z relro -z now")
+set(CMAKE_SHARED_LINKER_FLAGS "-z noexecstack -z relro -z now")
 
 find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
@@ -53,12 +53,7 @@ target_link_libraries(realsense_camera_nodelet
   /usr/local/lib/librealsense.so
 )
 add_dependencies(realsense_camera_nodelet realsense_camera_generate_messages_cpp ${PROJECT_NAME}_gencfg)
-install(TARGETS realsense_camera_nodelet LIBRARY
-  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-)
-install(FILES src/realsense_camera_nodelet_plugins.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+
 add_executable(realsense_camera_test test/realsense_camera_test_node.cpp)
 target_link_libraries(realsense_camera_test
   ${catkin_LIBRARIES}
