@@ -1,13 +1,15 @@
 <!-- Entry point for using RealSense devices -->
 <launch>
 
-  <!-- "camera" should be a user friendly string to uniquely identify the device namespace.
-       All topics are pushed down into the "camera" namespace, and it is prepended to tf frame ids. -->
+  <arg name="mode"                  default="manual"/> <!-- preset manual close -->
+  <arg name="camera_id"             default="1"/>
+  <arg name="enable_pointcloud"     default="true" />
+  <arg name="depth_height"          default="480" />
+  <arg name="depth_width"           default="640" />
+
+  <!-- "camera" should uniquely identify the device. All topics are pushed down
+       into the "camera" namespace, and it is prepended to tf frame ids. -->
   <arg name="camera"          default="camera" />
-
-  <!-- "serial_no" should be the unique identifier to connect to a device. -->
-  <arg name="serial_no"       default="" />
-
   <arg name="depth_frame_id"  default="$(arg camera)_depth_optical_frame" />
   <arg name="rgb_frame_id"    default="$(arg camera)_rgb_optical_frame" />
 
@@ -21,7 +23,10 @@
   <arg name="depth_registered" default="depth_registered" />
   <arg name="projector"        default="projector" />
 
-  <!-- Optionally suppress loading the driver nodelet. Useful while playing back recorded raw data from a bag.-->
+
+  <!-- Optionally suppress loading the driver nodelet and/or publishing the default tf
+       tree. Useful if you are playing back recorded raw data from a bag, or are
+       supplying a more accurate tf tree from calibration. -->
   <arg name="load_driver" default="true" />
   <arg name="publish_tf" default="true" />
   <!-- Processing Modules -->
@@ -55,7 +60,6 @@
     <!-- Load driver -->
     <include if="$(arg load_driver)"
              file="$(find realsense_camera)/launch/includes/realsense_r200_nodelet.launch.xml">
-      <arg name="serial_no"                 value="$(arg serial_no)" />
       <arg name="manager"                   value="$(arg manager)" />
       <arg name="depth_frame_id"            value="$(arg depth_frame_id)" />
       <arg name="rgb_frame_id"              value="$(arg rgb_frame_id)" />
@@ -66,11 +70,16 @@
       <arg name="enable_depth"              value="$(arg depth_processing)" />
       <arg name="enable_color"              value="$(arg rgb_processing)" />
       <arg name="enable_ir"                 value="$(arg ir_processing)" />
+      <arg name="mode"                      value="$(arg mode)" />
+      <arg name="camera"                    value="$(arg camera_id)" />
+      <arg name="enable_pointcloud"         value="$(arg enable_pointcloud)" />
+      <arg name="depth_height"              value="$(arg depth_height)" />
+      <arg name="depth_width"               value="$(arg depth_width)" />
 
     </include>
 
     <!-- Load standard constellation of processing nodelets -->
-    <include file="$(find rgbd_launch)/launch/includes/processing.launch.xml">
+    <!-- <include file="$(find rgbd_launch)/launch/includes/processing.launch.xml">
       <arg name="manager"                         value="$(arg manager)" />
       <arg name="rgb"                             value="$(arg rgb)" />
       <arg name="ir"                              value="$(arg ir)" />
@@ -86,7 +95,7 @@
       <arg name="disparity_registered_processing" value="$(arg disparity_registered_processing)" />
       <arg name="hw_registered_processing"        value="$(arg hw_registered_processing)" />
       <arg name="sw_registered_processing"        value="$(arg sw_registered_processing)" />
-    </include>
+    </include> -->
 
   </group> <!-- camera -->
 

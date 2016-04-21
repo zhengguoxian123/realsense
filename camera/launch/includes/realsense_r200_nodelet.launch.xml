@@ -13,6 +13,9 @@
     <arg name="enable_depth"        default="true" />
     <arg name="enable_color"        default="true" />
     <arg name="enable_ir"           default="true" />
+    <arg name="camera"              default="0" />
+    <arg name="depth_width"         default="480" />
+    <arg name="depth_height"        default="360" />
 
     <!-- "enable_depth_ir" will take the value of "enable_ir" only if "enable_ir" is true.
          Else "enable_depth_ir" will take the value of "enable_depth" -->
@@ -33,6 +36,9 @@
         <param name="enable_tf"         type="bool" value="$(arg publish_tf)" />
         <param name="depth_frame_id"    type="str"  value="$(arg depth_frame_id)" />
         <param name="rgb_frame_id"      type="str"  value="$(arg rgb_frame_id)" />
+        <param name="camera"            type="int"  value="$(arg camera)" />
+        <param name="depth_height"      type="int"  value="$(arg depth_height)" />
+        <param name="depth_width"       type="int"  value="$(arg depth_width)" />
 
         <remap from="camera/depth/image_raw"        to="$(arg depth)/image_raw" />
         <remap from="camera/color/image_raw"        to="$(arg rgb)/image_raw" />
