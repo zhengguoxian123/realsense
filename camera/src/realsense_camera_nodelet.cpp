@@ -75,9 +75,6 @@ namespace realsense_camera
     // Set default configurations.
     is_device_started_ = false;
 
-    frame_id_[RS_STREAM_INFRARED] = IR1_DEF_FRAME;
-    frame_id_[RS_STREAM_INFRARED2] = IR2_DEF_FRAME;
-
     for (int i = 0; i < STREAM_COUNT; ++i)
     {
       camera_info_[i] = NULL;
@@ -90,6 +87,11 @@ namespace realsense_camera
     image_transport::ImageTransport it (nh);
 
     setStreamOptions();
+
+    frame_id_[RS_STREAM_DEPTH] = depth_optical_frame_id_;
+    frame_id_[RS_STREAM_COLOR] = color_optical_frame_id_;
+    frame_id_[RS_STREAM_INFRARED] = ir_frame_id_;
+    frame_id_[RS_STREAM_INFRARED2] = ir2_frame_id_;
 
     // Advertise the various topics and services.
     camera_publisher_[RS_STREAM_COLOR] = it.advertiseCamera(COLOR_TOPIC, 1);
@@ -167,6 +169,12 @@ namespace realsense_camera
       rs_enable_stream(rs_device_, RS_STREAM_DEPTH, depth_width_, depth_height_, DEPTH_FORMAT, depth_fps_, &rs_error_);
       checkError();
     }
+    else if (mode_.compare ("close") == 0)
+    {
+      ROS_INFO_STREAM ("RealSense Camera - Enabling Depth Stream: close mode");
+      rs_enable_stream_preset (rs_device_, RS_STREAM_DEPTH, RS_PRESET_HIGHEST_FRAMERATE, &rs_error_);
+      checkError ();
+    }
     else
     {
       ROS_INFO_STREAM ("RealSense Camera - Enabling Depth Stream: preset mode");
@@ -190,6 +198,12 @@ namespace realsense_camera
       rs_enable_stream(rs_device_, RS_STREAM_INFRARED, depth_width_, depth_height_, IR1_FORMAT, depth_fps_, &rs_error_);
       checkError();
     }
+    else if (mode_.compare ("close") == 0)
+    {
+      ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared Stream: close mode");
+      rs_enable_stream_preset (rs_device_, RS_STREAM_INFRARED, RS_PRESET_HIGHEST_FRAMERATE, &rs_error_);
+      checkError ();
+    }
     else
     {
       ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared Stream: preset mode");
@@ -211,6 +225,11 @@ namespace realsense_camera
     {
       ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared2 Stream: manual mode");
       rs_enable_stream(rs_device_, RS_STREAM_INFRARED2, depth_width_, depth_height_, IR2_FORMAT, depth_fps_, 0);
+    }
+    else if (mode_.compare ("close") == 0)
+    {
+      ROS_INFO_STREAM ("RealSense Camera - Enabling Infrared2 Stream: close mode");
+      rs_enable_stream_preset (rs_device_, RS_STREAM_INFRARED2, RS_PRESET_HIGHEST_FRAMERATE, 0);
     }
     else
     {
@@ -334,7 +353,6 @@ namespace realsense_camera
 
     rs_context_ = rs_create_context(RS_API_VERSION, &rs_error_);
     checkError();
-
     num_of_cameras_ = rs_get_device_count(rs_context_, &rs_error_);
     checkError();
 
@@ -393,7 +411,8 @@ namespace realsense_camera
     {
       enableDepthStream();
       enableInfraredStream();
-      enableInfrared2Stream();
+      if (camera_.find (R200) != std::string::npos)
+        enableInfrared2Stream();
     }
 
     getCameraOptions();
@@ -537,7 +556,7 @@ namespace realsense_camera
 
     for (int i = 0; i < 5; i++)
     {
-      camera_info_[stream_index]->D.push_back(0);
+      camera_info_[stream_index]->D.push_back(intrinsic.coeffs[i]);
     }
   }
 
@@ -570,6 +589,13 @@ namespace realsense_camera
   {
     pnh_.getParam("serial_no", serial_no_);
     pnh_.param("camera", camera_, (std::string) R200);
+    pnh_.param("camera_type", camera_type_, DEFAULT_CAMERA_TYPE);
+    if (camera_type_ == 0) {
+      camera_ = "R200";
+    }
+    else {
+      camera_ = "SR300";
+    }
     pnh_.param("mode", mode_, DEFAULT_MODE);
     pnh_.param("enable_depth", enable_depth_, ENABLE_DEPTH);
     pnh_.param("enable_color", enable_color_, ENABLE_COLOR);
@@ -581,8 +607,13 @@ namespace realsense_camera
     pnh_.param("color_height", color_height_, COLOR_HEIGHT);
     pnh_.param("depth_fps", depth_fps_, DEPTH_FPS);
     pnh_.param("color_fps", color_fps_, COLOR_FPS);
-    pnh_.param("depth_frame_id", frame_id_[RS_STREAM_DEPTH], (std::string) DEPTH_OPTICAL_DEF_FRAME);
-    pnh_.param("rgb_frame_id", frame_id_[RS_STREAM_COLOR], (std::string) COLOR_OPTICAL_DEF_FRAME);
+    pnh_.param("base_frame_id", base_frame_id_, DEFAULT_BASE_FRAME_ID);
+    pnh_.param("depth_frame_id", depth_frame_id_, DEFAULT_DEPTH_FRAME_ID);
+    pnh_.param("color_frame_id", color_frame_id_, DEFAULT_COLOR_FRAME_ID);
+    pnh_.param("depth_optical_frame_id", depth_optical_frame_id_, DEFAULT_DEPTH_OPTICAL_FRAME_ID);
+    pnh_.param("color_optical_frame_id", color_optical_frame_id_, DEFAULT_COLOR_OPTICAL_FRAME_ID);
+    pnh_.param("ir_frame_id", ir_frame_id_, DEFAULT_IR_FRAME_ID);
+    pnh_.param("ir2_frame_id", ir2_frame_id_, DEFAULT_IR2_FRAME_ID);
   }
 
   /*
@@ -733,7 +764,8 @@ namespace realsense_camera
 
       enableDepthStream();
       enableInfraredStream();
-      enableInfrared2Stream();
+      if (camera_.find (R200) != std::string::npos)
+        enableInfrared2Stream();
 
       if (rs_is_device_streaming(rs_device_, 0) == 0)
       {
@@ -928,24 +960,24 @@ namespace realsense_camera
       // transform base frame to depth frame
       tr.setOrigin(tf::Vector3(z_extrinsic.translation[0], z_extrinsic.translation[1], z_extrinsic.translation[2]));
       tr.setRotation(tf::Quaternion(0, 0, 0, 1));
-      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, BASE_DEF_FRAME, DEPTH_DEF_FRAME));
+      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, base_frame_id_, depth_frame_id_));
 
       // transform depth frame to depth optical frame
       tr.setOrigin(tf::Vector3(0,0,0));
       q.setEuler( M_PI/2, 0.0, -M_PI/2 );
       tr.setRotation( q );
-      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, DEPTH_DEF_FRAME, frame_id_[RS_STREAM_DEPTH]));
+      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, depth_frame_id_, depth_optical_frame_id_));
 
       // transform base frame to color frame (these are the same)
       tr.setOrigin(tf::Vector3(0,0,0));
       tr.setRotation(tf::Quaternion(0, 0, 0, 1));
-      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, BASE_DEF_FRAME, COLOR_DEF_FRAME));
+      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, base_frame_id_, color_frame_id_));
 
       // transform color frame to color optical frame
       tr.setOrigin(tf::Vector3(0,0,0));
       q.setEuler( M_PI/2, 0.0, -M_PI/2 );
       tr.setRotation( q );
-      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, COLOR_DEF_FRAME, frame_id_[RS_STREAM_COLOR]));
+      tf_broadcaster.sendTransform(tf::StampedTransform(tr, time_stamp, color_frame_id_, color_optical_frame_id_));
 
       sleeper.sleep(); // need sleep or transform won't publish correctly
     }

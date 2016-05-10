@@ -76,6 +76,7 @@ public:
 
   // Default Constants.
   const int MAX_Z = 8;	// in meters
+  const int DEFAULT_CAMERA_TYPE = 0;	// default camera type : 0=R200 1=F200/SR300
   const std::string DEFAULT_MODE = "preset";
   const int DEPTH_HEIGHT = 360;
   const int DEPTH_WIDTH = 480;
@@ -91,13 +92,13 @@ public:
   const rs_format COLOR_FORMAT = RS_FORMAT_RGB8;
   const rs_format IR1_FORMAT = RS_FORMAT_Y8;
   const rs_format IR2_FORMAT = RS_FORMAT_Y8;
-  const char *BASE_DEF_FRAME = "camera_link";
-  const char *DEPTH_DEF_FRAME = "camera_depth_frame";
-  const char *COLOR_DEF_FRAME = "camera_rgb_frame";
-  const char *DEPTH_OPTICAL_DEF_FRAME = "camera_depth_optical_frame";
-  const char *COLOR_OPTICAL_DEF_FRAME = "camera_rgb_optical_frame";
-  const char *IR1_DEF_FRAME = "camera_infrared_optical_frame";
-  const char *IR2_DEF_FRAME = "camera_infrared2_optical_frame";
+  const std::string DEFAULT_BASE_FRAME_ID = "camera_link";
+  const std::string DEFAULT_DEPTH_FRAME_ID = "camera_depth_frame";
+  const std::string DEFAULT_COLOR_FRAME_ID = "camera_rgb_frame";
+  const std::string DEFAULT_DEPTH_OPTICAL_FRAME_ID = "camera_depth_optical_frame";
+  const std::string DEFAULT_COLOR_OPTICAL_FRAME_ID = "camera_rgb_optical_frame";
+  const std::string DEFAULT_IR_FRAME_ID = "camera_infrared_frame";
+  const std::string DEFAULT_IR2_FRAME_ID = "camera_infrared2_frame";
   const char *DEPTH_TOPIC = "camera/depth/image_raw";
   const char *COLOR_TOPIC = "camera/color/image_raw";
   const char *IR1_TOPIC = "camera/infrared1/image_raw";
@@ -119,6 +120,7 @@ private:
 
   int num_of_cameras_;
   std::string serial_no_;
+  int camera_type_;
   int color_height_;
   int color_width_;
   int depth_height_;
@@ -130,6 +132,13 @@ private:
   bool enable_depth_;
   bool enable_pointcloud_;
   bool enable_tf_;
+  std::string base_frame_id_;
+  std::string depth_frame_id_;
+  std::string color_frame_id_;
+  std::string depth_optical_frame_id_;
+  std::string color_optical_frame_id_;
+  std::string ir_frame_id_;
+  std::string ir2_frame_id_;
   std::string camera_ = "R200";
   const uint16_t *image_depth16_;
 
