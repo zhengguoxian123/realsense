@@ -32,58 +32,55 @@
 #ifndef REALSENSE_NODELET
 #define REALSENSE_NODELET
 
-#include <ros/ros.h>
 #include <nodelet/nodelet.h>
+#include <ros/ros.h>
 
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <std_msgs/String.h>
 #include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/String.h>
 
-#include <opencv2/core/core.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <image_transport/image_transport.h>
 #include <camera_info_manager/camera_info_manager.h>
+#include <image_transport/image_transport.h>
 
-#include <iostream>
-#include <boost/thread.hpp>
-#include <thread>
-#include <cstdlib>
-#include <cctype>
 #include <algorithm>
-#include <sstream>
-#include <memory>
+#include <boost/thread.hpp>
+#include <cctype>
+#include <cstdlib>
+#include <iostream>
 #include <map>
+#include <memory>
+#include <sstream>
+#include <thread>
 
+#include <dynamic_reconfigure/server.h>
 #include <librealsense/rs.hpp>
 #include <realsense_camera/cameraConfiguration.h>
-#include <dynamic_reconfigure/server.h>
 #include <realsense_camera/camera_paramsConfig.h>
 
-
-namespace realsense_camera
-{
-class RealsenseNodelet: public nodelet::Nodelet
-{
+namespace realsense_camera {
+class RealsenseNodelet : public nodelet::Nodelet {
 public:
-
   // Interfaces.
   virtual void onInit();
-  virtual ~ RealsenseNodelet();
+  virtual ~RealsenseNodelet();
 
   // Default Constants.
-  const int MAX_Z = 8;	// in meters
-  const int DEFAULT_CAMERA_TYPE = 0;	// default camera type : 0=R200 1=F200/SR300
+  const int MAX_Z = 8; // in meters
+  const int DEFAULT_CAMERA_TYPE =
+      0; // default camera type : 0=R200 1=F200/SR300
   const std::string DEFAULT_MODE = "preset";
-  const int DEPTH_HEIGHT = 360;
-  const int DEPTH_WIDTH = 480;
+  const int DEPTH_HEIGHT = 480;
+  const int DEPTH_WIDTH = 640;
   const int COLOR_HEIGHT = 480;
   const int COLOR_WIDTH = 640;
-  const int DEPTH_FPS = 60;
-  const int COLOR_FPS = 60;
+  const int DEPTH_FPS = 30;
+  const int COLOR_FPS = 30;
   const bool ENABLE_DEPTH = true;
   const bool ENABLE_COLOR = true;
   const bool ENABLE_PC = true;
@@ -91,11 +88,13 @@ public:
   const rs_format DEPTH_FORMAT = RS_FORMAT_Z16;
   const rs_format COLOR_FORMAT = RS_FORMAT_RGB8;
   const rs_format IR1_FORMAT = RS_FORMAT_Y8;
+  // const rs_format IR1_FORMAT = RS_FORMAT_Y16;
   const rs_format IR2_FORMAT = RS_FORMAT_Y8;
   const std::string DEFAULT_BASE_FRAME_ID = "camera_link";
   const std::string DEFAULT_DEPTH_FRAME_ID = "camera_depth_frame";
   const std::string DEFAULT_COLOR_FRAME_ID = "camera_rgb_frame";
-  const std::string DEFAULT_DEPTH_OPTICAL_FRAME_ID = "camera_depth_optical_frame";
+  const std::string DEFAULT_DEPTH_OPTICAL_FRAME_ID =
+      "camera_depth_optical_frame";
   const std::string DEFAULT_COLOR_OPTICAL_FRAME_ID = "camera_rgb_optical_frame";
   const std::string DEFAULT_IR_FRAME_ID = "camera_infrared_frame";
   const std::string DEFAULT_IR2_FRAME_ID = "camera_infrared2_frame";
@@ -144,16 +143,14 @@ private:
 
   cv::Mat image_[STREAM_COUNT];
 
-  rs_option edge_options_[4] = {
-    RS_OPTION_R200_AUTO_EXPOSURE_LEFT_EDGE,
-    RS_OPTION_R200_AUTO_EXPOSURE_TOP_EDGE,
-    RS_OPTION_R200_AUTO_EXPOSURE_RIGHT_EDGE,
-    RS_OPTION_R200_AUTO_EXPOSURE_BOTTOM_EDGE
-  };
+  rs_option edge_options_[4] = {RS_OPTION_R200_AUTO_EXPOSURE_LEFT_EDGE,
+                                RS_OPTION_R200_AUTO_EXPOSURE_TOP_EDGE,
+                                RS_OPTION_R200_AUTO_EXPOSURE_RIGHT_EDGE,
+                                RS_OPTION_R200_AUTO_EXPOSURE_BOTTOM_EDGE};
   double edge_values_[4];
 
   sensor_msgs::CameraInfoPtr camera_info_ptr_[STREAM_COUNT];
-  sensor_msgs::CameraInfo * camera_info_[STREAM_COUNT];
+  sensor_msgs::CameraInfo *camera_info_[STREAM_COUNT];
   image_transport::CameraPublisher camera_publisher_[STREAM_COUNT];
 
   ros::Time time_stamp_;
@@ -167,13 +164,14 @@ private:
   std::map<std::string, std::string> config_;
   int stream_step_[STREAM_COUNT];
 
-  struct option_str
-  {
+  struct CameraOptions {
     rs_option opt;
     double min, max, step, value;
   };
-  std::vector<option_str> options;
-  boost::shared_ptr<dynamic_reconfigure::Server<realsense_camera::camera_paramsConfig>> dynamic_reconf_server_;
+  std::vector<CameraOptions> camera_options_;
+  boost::shared_ptr<
+      dynamic_reconfigure::Server<realsense_camera::camera_paramsConfig>>
+      dynamic_reconf_server_;
 
   // Member Functions.
   void enableColorStream();
@@ -185,19 +183,21 @@ private:
   void prepareStreamCalibData(rs_stream calib_data);
   void prepareStreamData(rs_stream rs_strm);
   void publishStreams();
-  void publishPointCloud(cv::Mat & image_rgb);
+  void publishPointCloud(cv::Mat &image_rgb);
   void publishTransforms();
   void devicePoll();
   void getCameraOptions();
   void allocateResources();
   bool connectToCamera();
-  rs_device * getCameraBySerialNumber();
+  rs_device *getCameraBySerialNumber();
   void fillStreamEncoding();
   void setStreamOptions();
   void setStaticCameraOptions();
-  bool getCameraOptionValues(realsense_camera::cameraConfiguration::Request & req, realsense_camera::cameraConfiguration::Response & res);
-  void configCallback(realsense_camera::camera_paramsConfig &config, uint32_t level);
-
+  bool
+  getCameraOptionValues(realsense_camera::cameraConfiguration::Request &req,
+                        realsense_camera::cameraConfiguration::Response &res);
+  void configCallback(realsense_camera::camera_paramsConfig &config,
+                      uint32_t level);
 };
 }
 

@@ -460,7 +460,7 @@ namespace realsense_camera
   {
     for (int i = 0; i < RS_OPTION_COUNT; ++i)
     {
-      option_str o = { (rs_option) i };
+      CameraOptions o = { (rs_option) i };
 
       if (rs_device_supports_option(rs_device_, o.opt, &rs_error_))
       {
@@ -469,7 +469,7 @@ namespace realsense_camera
         if (o.min != o.max)
         {
           o.value = rs_get_device_option(rs_device_, o.opt, 0);
-          options.push_back(o);
+          camera_options_.push_back(o);
         }
       }
     }
@@ -536,9 +536,9 @@ namespace realsense_camera
       rs_extrinsics z_extrinsic;
       rs_get_device_extrinsics(rs_device_, RS_STREAM_DEPTH, RS_STREAM_COLOR, &z_extrinsic, &rs_error_);
       checkError();
-      camera_info_[stream_index]->P.at(3) = z_extrinsic.translation[0]/1000;     // Tx
-      camera_info_[stream_index]->P.at(7) = z_extrinsic.translation[1]/1000;     // Ty
-      camera_info_[stream_index]->P.at(11) = z_extrinsic.translation[2]/1000;    // Tz
+      camera_info_[stream_index]->P.at(3) = z_extrinsic.translation[0];     // Tx
+      camera_info_[stream_index]->P.at(7) = z_extrinsic.translation[1];     // Ty
+      camera_info_[stream_index]->P.at(11) = z_extrinsic.translation[2];    // Tz
     }
 
     camera_info_[stream_index]->distortion_model = "plumb_bob";
@@ -569,7 +569,7 @@ namespace realsense_camera
     std::string get_options_result_str;
     std::string opt_name, opt_value;
 
-    for (option_str o: options)
+    for (CameraOptions o: camera_options_)
     {
       opt_name = rs_option_to_string(o.opt);
       std::transform(opt_name.begin(), opt_name.end(), opt_name.begin(), ::tolower);
@@ -627,7 +627,7 @@ namespace realsense_camera
     std::vector<camera_paramsConfig::AbstractParamDescriptionConstPtr> param_desc = params_config.__getParamDescriptions__();
 
     // Iterate through the supported camera options
-    for (option_str o: options)
+    for (CameraOptions o: camera_options_)
     {
       std::string opt_name = rs_option_to_string(o.opt);
       bool found = false;
