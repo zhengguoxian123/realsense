@@ -1,5 +1,5 @@
 /******************************************************************************
- Copyright (c) 2016, Intel Corporation
+ Copyright (c) 2017, Intel Corporation
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -29,31 +29,33 @@
  *******************************************************************************/
 
 #pragma once
-#ifndef F200_NODELET
-#define F200_NODELET
+#ifndef REALSENSE_CAMERA_F200_NODELET_H
+#define REALSENSE_CAMERA_F200_NODELET_H
 
+#include <string>
+#include <vector>
 #include <dynamic_reconfigure/server.h>
 
 #include <realsense_camera/f200_paramsConfig.h>
-#include <realsense_camera/base_nodelet.h>
+#include <realsense_camera/sync_nodelet.h>
 
 namespace realsense_camera
 {
-  class F200Nodelet: public realsense_camera::BaseNodelet
-  {
-  public:
+class F200Nodelet: public realsense_camera::SyncNodelet
+{
+public:
+  void onInit();
 
-    void onInit();
+protected:
+  // Member Variables.
+  boost::shared_ptr<dynamic_reconfigure::Server<realsense_camera::f200_paramsConfig>> dynamic_reconf_server_;
+  rs_stream fastest_stream_ = RS_STREAM_DEPTH;
 
-  protected:
-
-    // Member Variables.
-    boost::shared_ptr<dynamic_reconfigure::Server<realsense_camera::f200_paramsConfig>> dynamic_reconf_server_;
-
-    // Member Functions.
-    std::vector<std::string> setDynamicReconfServer();
-    void startDynamicReconfCallback();
-    void configCallback(realsense_camera::f200_paramsConfig &config, uint32_t level);
-  };
-}
-#endif
+  // Member Functions.
+  void setStreams();
+  std::vector<std::string> setDynamicReconfServer();
+  void startDynamicReconfCallback();
+  void configCallback(realsense_camera::f200_paramsConfig &config, uint32_t level);
+};
+}  // namespace realsense_camera
+#endif  // REALSENSE_CAMERA_F200_NODELET_H
