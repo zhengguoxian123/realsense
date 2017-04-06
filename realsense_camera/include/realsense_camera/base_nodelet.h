@@ -118,6 +118,9 @@ protected:
   int unit_step_size_[STREAM_COUNT];
   int step_[STREAM_COUNT];
   double ts_[STREAM_COUNT];
+  // Sequence numbers (or frame IDs in the realsense frame, not TF) for images,
+  // for timestamp resolution and publishing.
+  int sequence_ids_[STREAM_COUNT];
   std::string frame_id_[STREAM_COUNT];
   std::string optical_frame_id_[STREAM_COUNT];
   cv::Mat image_[STREAM_COUNT] = {};

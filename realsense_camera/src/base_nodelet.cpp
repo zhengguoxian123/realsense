@@ -595,6 +595,11 @@ namespace realsense_camera
     color_frame_handler_ = [&](rs::frame frame)  // NOLINT(build/c++11)
     {
       publishTopic(RS_STREAM_COLOR, frame);
+
+      if (enable_pointcloud_ == true)
+      {
+        publishPCTopic();
+      }
     };
 
     ir_frame_handler_ = [&](rs::frame frame)  // NOLINT(build/c++11)
@@ -875,6 +880,8 @@ namespace realsense_camera
     double frame_ts = frame.get_timestamp();
     if (ts_[stream_index] != frame_ts)  // Publish frames only if its not duplicate
     {
+      // Also update the sequence number.
+      sequence_ids_[stream_index] = frame.get_frame_number();
       setImageData(stream_index, frame);
       // Publish stream only if there is at least one subscriber.
       if (camera_publisher_[stream_index].getNumSubscribers() > 0)
@@ -918,6 +925,12 @@ namespace realsense_camera
    */
   void BaseNodelet::publishPCTopic()
   {
+    // Check if the depth and rgb sequence numbers match; otherwise we're out
+    // of sync anyway.
+    if (sequence_ids_[RS_STREAM_COLOR] != sequence_ids_[RS_STREAM_DEPTH]) {
+      ROS_WARN_THROTTLE(1.0, "Mismatched IDs: color: %d depth: %d", sequence_ids_[RS_STREAM_COLOR], sequence_ids_[RS_STREAM_DEPTH]);
+      return;
+    }
     cv::Mat & image_color = image_[RS_STREAM_COLOR];
     // Publish pointcloud only if there is at least one subscriber.
     if (pointcloud_publisher_.getNumSubscribers() > 0 && rs_is_stream_enabled(rs_device_, RS_STREAM_DEPTH, 0) == 1)
@@ -941,7 +954,7 @@ namespace realsense_camera
       sensor_msgs::PointCloud2 msg_pointcloud;
       msg_pointcloud.width = width_[RS_STREAM_DEPTH];
       msg_pointcloud.height = height_[RS_STREAM_DEPTH];
-      msg_pointcloud.header.stamp = ros::Time::now();
+      msg_pointcloud.header.stamp = getTimestamp(RS_STREAM_DEPTH, ts_[RS_STREAM_DEPTH]);
       msg_pointcloud.is_dense = true;
 
       sensor_msgs::PointCloud2Modifier modifier(msg_pointcloud);
