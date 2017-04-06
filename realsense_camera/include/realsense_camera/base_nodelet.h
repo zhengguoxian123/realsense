@@ -129,7 +129,7 @@ protected:
   std::string base_frame_id_;
   float max_z_ = -1.0f;
   bool enable_pointcloud_;
-    bool enforce_rgbd_sync_;
+  bool enforce_rgbd_sync_;
   bool enable_tf_;
   bool enable_tf_dynamic_;
   double tf_publication_rate_;

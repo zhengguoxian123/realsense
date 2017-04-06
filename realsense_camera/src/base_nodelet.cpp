@@ -933,7 +933,6 @@ namespace realsense_camera
     // Check if the depth and rgb sequence numbers match; otherwise we're out
     // of sync anyway.
     if (enforce_rgbd_sync_ && sequence_ids_[RS_STREAM_COLOR] != sequence_ids_[RS_STREAM_DEPTH]) {
-      ROS_WARN_THROTTLE(1.0, "Mismatched IDs: color: %d depth: %d", sequence_ids_[RS_STREAM_COLOR], sequence_ids_[RS_STREAM_DEPTH]);
       return;
     }
     cv::Mat & image_color = image_[RS_STREAM_COLOR];
