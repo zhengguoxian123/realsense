@@ -28,16 +28,21 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+
 #include <string>
 #include <algorithm>
 #include <vector>
 #include <map>
 #include <realsense_camera/base_nodelet.h>
+#define _GNU_SOURCE
+#include <unistd.h>
 
 using cv::Mat;
 using cv::Scalar;
 using std::string;
 using std::vector;
+
+extern char** environ;
 
 PLUGINLIB_EXPORT_CLASS(realsense_camera::BaseNodelet, nodelet::Nodelet)
 namespace realsense_camera
@@ -1269,7 +1274,7 @@ namespace realsense_camera
       // sleep for 1 second to ensure previous calls are completed
       sleep(1);
       // environ is the current environment from <unistd.h>
-      execvpe(argv[0], argv, environ);
+      //execvpe(argv[0], argv, environ);
 
       _exit(EXIT_FAILURE);  // exec never returns
     }
