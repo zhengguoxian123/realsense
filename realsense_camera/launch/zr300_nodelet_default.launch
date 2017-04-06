@@ -9,9 +9,9 @@
   <!-- These 'arg' tags are just place-holders for passing values from test files.
   The recommended way is to pass the values directly into the 'param' tags. -->
   <arg name="mode"              default="manual" />
-  <arg name="color_fps"         default="60" />
+  <arg name="color_fps"         default="30" />
   <arg name="fisheye_fps"       default="30" />
-  <arg name="depth_fps"         default="60" />
+  <arg name="depth_fps"         default="30" />
   <arg name="fisheye_strobe"    default="1" />
   <arg name="fisheye_external_trigger"    default="1" />
 

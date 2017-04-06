@@ -162,6 +162,7 @@ namespace realsense_camera
     pnh_.param("enable_color", enable_[RS_STREAM_COLOR], ENABLE_COLOR);
     pnh_.param("enable_ir", enable_[RS_STREAM_INFRARED], ENABLE_IR);
     pnh_.param("enable_pointcloud", enable_pointcloud_, ENABLE_PC);
+    pnh_.param("enforce_rgbd_sync", enforce_rgbd_sync_, ENFORCE_RGBD_SYNC);
     pnh_.param("enable_tf", enable_tf_, ENABLE_TF);
     pnh_.param("enable_tf_dynamic", enable_tf_dynamic_, ENABLE_TF_DYNAMIC);
     pnh_.param("tf_publication_rate", tf_publication_rate_, TF_PUBLICATION_RATE);
@@ -925,9 +926,13 @@ namespace realsense_camera
    */
   void BaseNodelet::publishPCTopic()
   {
+    // Make sure neither stream updates while we process the pointcloud.
+    std::unique_lock<std::mutex> lock_depth(frame_mutex_[RS_STREAM_DEPTH]);
+    std::unique_lock<std::mutex> lock_color(frame_mutex_[RS_STREAM_COLOR]);
+
     // Check if the depth and rgb sequence numbers match; otherwise we're out
     // of sync anyway.
-    if (sequence_ids_[RS_STREAM_COLOR] != sequence_ids_[RS_STREAM_DEPTH]) {
+    if (enforce_rgbd_sync_ && sequence_ids_[RS_STREAM_COLOR] != sequence_ids_[RS_STREAM_DEPTH]) {
       ROS_WARN_THROTTLE(1.0, "Mismatched IDs: color: %d depth: %d", sequence_ids_[RS_STREAM_COLOR], sequence_ids_[RS_STREAM_DEPTH]);
       return;
     }
