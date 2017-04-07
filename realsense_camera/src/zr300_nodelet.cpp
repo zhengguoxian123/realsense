@@ -563,6 +563,7 @@ namespace realsense_camera
           imu_publisher_.publish(imu_msg);
           prev_imu_ts_ = imu_ts_;
         }
+        sleep(1000);
       }
     }
     stopIMU();
@@ -595,8 +596,8 @@ namespace realsense_camera
   {
     motion_handler_ = [&](rs::motion_data entry)  // NOLINT(build/c++11)
     {
+      ROS_INFO("IMU callback.");
       std::unique_lock<std::mutex> lock(imu_mutex_);
-
       if (entry.timestamp_data.source_id == RS_EVENT_IMU_GYRO)
       {
         imu_angular_vel_.x = entry.axes[0];
@@ -611,7 +612,7 @@ namespace realsense_camera
       }
       imu_ts_ = static_cast<double>(entry.timestamp_data.timestamp);
 
-      ROS_DEBUG_STREAM(" - Motion,\t host time " << imu_ts_
+      ROS_INFO_STREAM(" - Motion,\t host time " << imu_ts_
           << "\ttimestamp: " << std::setprecision(8) << (double)entry.timestamp_data.timestamp*IMU_UNITS_TO_MSEC
           << "\tsource: " << (rs::event)entry.timestamp_data.source_id
           << "\tframe_num: " << entry.timestamp_data.frame_number
@@ -623,13 +624,19 @@ namespace realsense_camera
     // Get timestamp that syncs all sensors.
     timestamp_handler_ = [](rs::timestamp_data entry)
     {
+        ROS_INFO("Timestamp callback.");
+        // Debug output for fun:
         auto now = std::chrono::system_clock::now().time_since_epoch();
         auto sys_time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 
-        ROS_DEBUG_STREAM(" - TimeEvent, host time " << sys_time
+        ROS_INFO_STREAM(" - TimeEvent, host time " << sys_time
             << "\ttimestamp: " << std::setprecision(8) << (double)entry.timestamp*IMU_UNITS_TO_MSEC
             << "\tsource: " << (rs::event)entry.source_id
             << "\tframe_num: " << entry.frame_number);
+
+        // Time sync output for profit.
+        double time_now = ros::Time::now().toSec();
+
     };
   }
 
@@ -862,6 +869,7 @@ namespace realsense_camera
    */
   void ZR300Nodelet::stopIMU()
   {
+    ROS_INFO("Stopping IMU.");
     rs_stop_source(rs_device_, (rs_source)rs::source::motion_data, &rs_error_);
     checkError();
     rs_disable_motion_tracking(rs_device_, &rs_error_);

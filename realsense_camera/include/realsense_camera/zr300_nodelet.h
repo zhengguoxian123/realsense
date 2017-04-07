@@ -42,6 +42,7 @@
 #include <realsense_camera/IMUInfo.h>
 #include <realsense_camera/GetIMUInfo.h>
 #include <realsense_camera/base_nodelet.h>
+#include <realsense_camera/time_sync.h>
 
 namespace realsense_camera
 {
@@ -71,6 +72,9 @@ protected:
   rs_extrinsics color2ir2_extrinsic_;      // color frame is base frame
   rs_extrinsics color2fisheye_extrinsic_;  // color frame is base frame
   rs_extrinsics color2imu_extrinsic_;      // color frame is base frame
+
+  // Time synchronizer.
+  TimeSyncFilter time_sync_;
 
   // Member Functions.
   void getParameters();

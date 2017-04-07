@@ -5,9 +5,9 @@
  *      Authors: Michael Burri, Helen Oleynikova
  */
 
-#include "realsense_ros/time_sync.h"
+#include "realsense_camera/time_sync.h"
 
-namespace realsense_ros {
+namespace realsense_camera {
 
 TimeSyncFilter::TimeSyncFilter() : is_initialized_(false) {}
 
@@ -91,4 +91,5 @@ void TimeSyncFilter::initialize(double device_time, double local_time) {
   last_update_device_time_ = device_time;
   is_initialized_ = true;
 }
-}
+
+}  // namespace realsense_camera

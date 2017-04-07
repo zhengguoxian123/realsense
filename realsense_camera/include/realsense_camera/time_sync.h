@@ -13,7 +13,7 @@
 #ifndef REALSENSE_CAMERA_TIME_SYNC_H_
 #define REALSENSE_CAMERA_TIME_SYNC_H_
 
-namespace realsense_ros {
+namespace realsense_camera {
 
 class TimeSyncFilter {
  public:
@@ -44,6 +44,6 @@ class TimeSyncFilter {
   double dt_;
 };
 
-}  // realsense ros
+}  // namespace realsense_camera
 
 #endif  // REALSENSE_CAMERA_TIME_SYNC_H_
