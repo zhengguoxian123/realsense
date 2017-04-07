@@ -121,6 +121,8 @@ protected:
   // Sequence numbers (or frame IDs in the realsense frame, not TF) for images,
   // for timestamp resolution and publishing.
   int sequence_ids_[STREAM_COUNT];
+  // What factor to subsample the FPS by. INTEGER ONLY. Because it's easier.
+  int subsample_fps_[STREAM_COUNT] = {1};
   std::string frame_id_[STREAM_COUNT];
   std::string optical_frame_id_[STREAM_COUNT];
   cv::Mat image_[STREAM_COUNT] = {};

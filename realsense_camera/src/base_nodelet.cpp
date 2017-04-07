@@ -177,6 +177,11 @@ namespace realsense_camera
     pnh_.param("color_optical_frame_id", optical_frame_id_[RS_STREAM_COLOR], DEFAULT_COLOR_OPTICAL_FRAME_ID);
     pnh_.param("ir_optical_frame_id", optical_frame_id_[RS_STREAM_INFRARED], DEFAULT_IR_OPTICAL_FRAME_ID);
 
+    pnh_.param("fisheye_subsample_fps", subsample_fps_[RS_STREAM_FISHEYE], 1);
+    pnh_.param("color_subsample_fps", subsample_fps_[RS_STREAM_COLOR], 1);
+    pnh_.param("depth_subsample_fps", subsample_fps_[RS_STREAM_DEPTH], 1);
+    pnh_.param("ir_subsample_fps", subsample_fps_[RS_STREAM_INFRARED], 1);
+
     // set IR stream to match depth
     width_[RS_STREAM_INFRARED] = width_[RS_STREAM_DEPTH];
     height_[RS_STREAM_INFRARED] = height_[RS_STREAM_DEPTH];
@@ -876,7 +881,9 @@ namespace realsense_camera
     std::unique_lock<std::mutex> lock(frame_mutex_[stream_index]);
 
     double frame_ts = frame.get_timestamp();
-    if (ts_[stream_index] != frame_ts)  // Publish frames only if its not duplicate
+    // Publish frames only if its not duplicate
+    if (ts_[stream_index] != frame_ts &&
+       frame.get_frame_number() % subsample_fps_[stream_index] == 0)
     {
       // Also update the sequence number.
       sequence_ids_[stream_index] = frame.get_frame_number();
@@ -897,8 +904,8 @@ namespace realsense_camera
         camera_info_ptr_[stream_index]->header.stamp = msg->header.stamp;
         camera_publisher_[stream_index].publish(msg, camera_info_ptr_[stream_index]);
       }
+      ts_[stream_index] = frame_ts;
     }
-    ts_[stream_index] = frame_ts;
   }
   catch(const rs::error & e)
   {

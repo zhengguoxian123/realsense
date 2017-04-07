@@ -892,8 +892,13 @@ namespace realsense_camera
   ros::Time ZR300Nodelet::getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number) {
     ros::Time local_timestamp;
 
-    findTimestamp(sequence_number, RS_EVENT_IMU_MOTION_CAM, nullptr,
-                    &local_timestamp);
+    if (stream_index == RS_STREAM_FISHEYE) {
+      findTimestamp(sequence_number, RS_EVENT_IMU_MOTION_CAM, nullptr,
+                      &local_timestamp);
+    } else {
+      findTimestamp(sequence_number, RS_EVENT_IMU_DEPTH_CAM, nullptr,
+                      &local_timestamp);
+    }
     return local_timestamp;
   }
 
@@ -918,7 +923,7 @@ namespace realsense_camera
         return true;
       }
     }
-    ROS_WARN("Looking for sequence number: %d, could not find it as first and last are %d and %d",
+    ROS_WARN("Looking for sequence number: %d, could not find it as first and last are %llu and %llu",
       sequence_number, timestamp_queue_.front().frame_number, timestamp_queue_.back().frame_number);
     return false;
   }
