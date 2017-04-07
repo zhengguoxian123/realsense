@@ -61,8 +61,8 @@ protected:
   std::string imu_optical_frame_id_;
   geometry_msgs::Vector3 imu_angular_vel_;
   geometry_msgs::Vector3 imu_linear_accel_;
-  double imu_ts_;
-  double prev_imu_ts_;
+  double imu_ts_device_time_;
+  double prev_imu_ts_device_time_;
   ros::Publisher imu_publisher_;
   boost::shared_ptr<boost::thread> imu_thread_;
   std::function<void(rs::motion_data)> motion_handler_;
@@ -75,6 +75,10 @@ protected:
 
   // Time synchronizer.
   TimeSyncFilter time_sync_;
+
+  // Queue of timestamps to sync everything to IMU clock.
+  mutable std::mutex timestamp_mutex_;
+  std::deque<rs::timestamp_data> timestamp_queue_;
 
   // Member Functions.
   void getParameters();
@@ -95,6 +99,10 @@ protected:
   void setFrameCallbacks();
   std::function<void(rs::frame f)> fisheye_frame_handler_, ir2_frame_handler_;
   void stopIMU();
+  virtual ros::Time getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number);
+  bool findTimestamp(unsigned short sequence_number, rs_event_source source,
+      int* timestamp_imu, ros::Time* timestamp);
+
 };
 }  // namespace realsense_camera
 #endif  // REALSENSE_CAMERA_ZR300_NODELET_H

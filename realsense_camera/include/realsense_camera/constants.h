@@ -85,6 +85,7 @@ namespace realsense_camera
     const double ROTATION_IDENTITY[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
     const float MILLIMETER_METERS  = 0.001;
     const double MILLISECONDS_TO_SECONDS = 0.001;
+    const size_t TIMESTAMP_QUEUE_MAX_SIZE = 200;
 
     // R200 and ZR300 Constants.
     const std::string IR2_NAMESPACE = "ir2";

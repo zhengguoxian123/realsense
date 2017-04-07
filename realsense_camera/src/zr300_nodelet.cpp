@@ -521,7 +521,7 @@ namespace realsense_camera
    */
   void ZR300Nodelet::publishIMU()
   {
-    prev_imu_ts_ = -1;
+    prev_imu_ts_device_time_ = -1;
     while (ros::ok())
     {
       if (start_stop_srv_called_ == true)
@@ -548,10 +548,11 @@ namespace realsense_camera
       {
         std::unique_lock<std::mutex> lock(imu_mutex_);
 
-        if (prev_imu_ts_ != imu_ts_)
+        // Super sketchy double equals check... Maybe switch to sequence number?
+        if (prev_imu_ts_device_time_ != imu_ts_device_time_)
         {
           sensor_msgs::Imu imu_msg = sensor_msgs::Imu();
-          imu_msg.header.stamp = ros::Time(camera_start_ts_) + ros::Duration(imu_ts_ * 0.001);
+          imu_msg.header.stamp = ros::Time(time_sync_.getLocalTimestamp(imu_ts_device_time_));
           imu_msg.header.frame_id = imu_optical_frame_id_;
 
           // Setting just the first element to -1.0 because device does not give orientation data
@@ -561,9 +562,8 @@ namespace realsense_camera
           imu_msg.linear_acceleration = imu_linear_accel_;
 
           imu_publisher_.publish(imu_msg);
-          prev_imu_ts_ = imu_ts_;
+          prev_imu_ts_device_time_ = imu_ts_device_time_;
         }
-        sleep(1000);
       }
     }
     stopIMU();
@@ -596,13 +596,14 @@ namespace realsense_camera
   {
     motion_handler_ = [&](rs::motion_data entry)  // NOLINT(build/c++11)
     {
-      ROS_INFO("IMU callback.");
       std::unique_lock<std::mutex> lock(imu_mutex_);
       if (entry.timestamp_data.source_id == RS_EVENT_IMU_GYRO)
       {
         imu_angular_vel_.x = entry.axes[0];
         imu_angular_vel_.y = entry.axes[1];
         imu_angular_vel_.z = entry.axes[2];
+        // Only update timestamp on gyro!
+        imu_ts_device_time_ = static_cast<double>(entry.timestamp_data.timestamp) * MILLISECONDS_TO_SECONDS;
       }
       else if (entry.timestamp_data.source_id == RS_EVENT_IMU_ACCEL)
       {
@@ -610,10 +611,9 @@ namespace realsense_camera
         imu_linear_accel_.y = entry.axes[1];
         imu_linear_accel_.z = entry.axes[2];
       }
-      imu_ts_ = static_cast<double>(entry.timestamp_data.timestamp);
 
-      ROS_INFO_STREAM(" - Motion,\t host time " << imu_ts_
-          << "\ttimestamp: " << std::setprecision(8) << (double)entry.timestamp_data.timestamp*IMU_UNITS_TO_MSEC
+      ROS_DEBUG_STREAM(" - Motion,\t host time " << imu_ts_device_time_
+          << "\ttimestamp: " << std::setprecision(8) << (double)entry.timestamp_data.timestamp*MILLISECONDS_TO_SECONDS
           << "\tsource: " << (rs::event)entry.timestamp_data.source_id
           << "\tframe_num: " << entry.timestamp_data.frame_number
           << "\tx: " << std::setprecision(5) <<  entry.axes[0]
@@ -622,21 +622,34 @@ namespace realsense_camera
     };
 
     // Get timestamp that syncs all sensors.
-    timestamp_handler_ = [](rs::timestamp_data entry)
+    timestamp_handler_ = [&](rs::timestamp_data entry)
     {
-        ROS_INFO("Timestamp callback.");
         // Debug output for fun:
         auto now = std::chrono::system_clock::now().time_since_epoch();
         auto sys_time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 
-        ROS_INFO_STREAM(" - TimeEvent, host time " << sys_time
-            << "\ttimestamp: " << std::setprecision(8) << (double)entry.timestamp*IMU_UNITS_TO_MSEC
+        ROS_DEBUG_STREAM(" - TimeEvent, host time " << sys_time
+            << "\ttimestamp: " << std::setprecision(8) << (double)entry.timestamp*MILLISECONDS_TO_SECONDS
             << "\tsource: " << (rs::event)entry.source_id
             << "\tframe_num: " << entry.frame_number);
 
         // Time sync output for profit.
         double time_now = ros::Time::now().toSec();
 
+        if (!time_sync_.isInitialized() ||
+            (rs::event)entry.source_id == rs::event::event_imu_depth_cam ||
+            (rs::event)entry.source_id == rs::event::event_imu_motion_cam) {
+          // TODO: check if this is correct -- should we keep first timestamp
+          // checks outside?
+          time_sync_.updateFilter(
+              static_cast<double>(entry.timestamp) * MILLISECONDS_TO_SECONDS,
+              time_now);
+
+          timestamp_queue_.push_back(entry);
+          while (timestamp_queue_.size() >= TIMESTAMP_QUEUE_MAX_SIZE) {
+            timestamp_queue_.pop_front();
+          }
+        }
     };
   }
 
@@ -875,4 +888,39 @@ namespace realsense_camera
     rs_disable_motion_tracking(rs_device_, &rs_error_);
     checkError();
   }
+
+  ros::Time ZR300Nodelet::getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number) {
+    ros::Time local_timestamp;
+
+    findTimestamp(sequence_number, RS_EVENT_IMU_MOTION_CAM, nullptr,
+                    &local_timestamp);
+    return local_timestamp;
+  }
+
+  bool ZR300Nodelet::findTimestamp(unsigned short sequence_number, rs_event_source source,
+      int* timestamp_imu, ros::Time* timestamp) {
+    std::lock_guard<std::mutex> lock(timestamp_mutex_);
+
+    for (auto ts : timestamp_queue_) {
+      if (ts.source_id == source && ts.frame_number == sequence_number) {
+        if (timestamp_imu) {
+          *timestamp_imu = ts.timestamp;
+        }
+        if (timestamp) {
+          double device_time =
+              static_cast<double>(ts.timestamp) * MILLISECONDS_TO_SECONDS;
+          ros::Time local_time;
+          double local_timestamp;
+          local_timestamp = time_sync_.getLocalTimestamp(device_time);
+          local_time.fromSec(local_timestamp);
+          *timestamp = local_time;
+        }
+        return true;
+      }
+    }
+    ROS_WARN("Looking for sequence number: %d, could not find it as first and last are %d and %d",
+      sequence_number, timestamp_queue_.front().frame_number, timestamp_queue_.back().frame_number);
+    return false;
+  }
+
 }  // namespace realsense_camera

@@ -34,15 +34,12 @@
 #include <vector>
 #include <map>
 #include <realsense_camera/base_nodelet.h>
-#define _GNU_SOURCE
 #include <unistd.h>
 
 using cv::Mat;
 using cv::Scalar;
 using std::string;
 using std::vector;
-
-extern char** environ;
 
 PLUGINLIB_EXPORT_CLASS(realsense_camera::BaseNodelet, nodelet::Nodelet)
 namespace realsense_camera
@@ -865,7 +862,7 @@ namespace realsense_camera
   /*
    * Determine the timestamp for the publish topic.
    */
-  ros::Time BaseNodelet::getTimestamp(rs_stream stream_index, double frame_ts)
+  ros::Time BaseNodelet::getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number)
   {
     return ros::Time(camera_start_ts_) + ros::Duration(frame_ts * 0.001);
   }
@@ -892,7 +889,7 @@ namespace realsense_camera
                                 image_[stream_index]).toImageMsg();
         msg->header.frame_id = optical_frame_id_[stream_index];
         // Publish timestamp to synchronize frames.
-        msg->header.stamp = getTimestamp(stream_index, frame_ts);
+        msg->header.stamp = getTimestamp(stream_index, frame_ts, frame.get_frame_number());
         msg->width = image_[stream_index].cols;
         msg->height = image_[stream_index].rows;
         msg->is_bigendian = false;
@@ -958,7 +955,7 @@ namespace realsense_camera
       sensor_msgs::PointCloud2 msg_pointcloud;
       msg_pointcloud.width = width_[RS_STREAM_DEPTH];
       msg_pointcloud.height = height_[RS_STREAM_DEPTH];
-      msg_pointcloud.header.stamp = getTimestamp(RS_STREAM_DEPTH, ts_[RS_STREAM_DEPTH]);
+      msg_pointcloud.header.stamp = getTimestamp(RS_STREAM_DEPTH, ts_[RS_STREAM_DEPTH], sequence_ids_[RS_STREAM_DEPTH]);
       msg_pointcloud.is_dense = true;
 
       sensor_msgs::PointCloud2Modifier modifier(msg_pointcloud);

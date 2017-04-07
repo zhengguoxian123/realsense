@@ -22,7 +22,7 @@ double TimeSyncFilter::getLocalTimestamp(double device_time) {
   return device_time + x_(0) + dt * x_(1);
 }
 
-void TimeSyncFilter::print() {
+void TimeSyncFilter::print() const {
   std::cout << "offset: " << x_(0) << "skew: " << x_(1) << "dt" << dt_
             << std::endl;
   // std::cout << P_<< std::endl;
@@ -90,6 +90,10 @@ void TimeSyncFilter::initialize(double device_time, double local_time) {
 
   last_update_device_time_ = device_time;
   is_initialized_ = true;
+}
+
+bool TimeSyncFilter::isInitialized() const {
+  return is_initialized_;
 }
 
 }  // namespace realsense_camera

@@ -28,8 +28,9 @@ class TimeSyncFilter {
   ~TimeSyncFilter() {};
   double getLocalTimestamp(double device_time);
   void updateFilter(double device_time, double local_time);
-  void print();
+  void print() const;
   void reset();
+  bool isInitialized() const;
  private:
   void initialize(double device_time, double local_time);
   bool isOutlier(double device_time, double local_time);
