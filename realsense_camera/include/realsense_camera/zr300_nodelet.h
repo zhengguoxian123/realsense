@@ -59,15 +59,9 @@ protected:
   bool enable_imu_;
   std::string imu_frame_id_;
   std::string imu_optical_frame_id_;
-  geometry_msgs::Vector3 imu_angular_vel_;
-  geometry_msgs::Vector3 imu_linear_accel_;
-  double imu_ts_device_time_;
-  double prev_imu_ts_device_time_;
   ros::Publisher imu_publisher_;
-  boost::shared_ptr<boost::thread> imu_thread_;
   std::function<void(rs::motion_data)> motion_handler_;
   std::function<void(rs::timestamp_data)> timestamp_handler_;
-  std::mutex imu_mutex_;
 
   rs_extrinsics color2ir2_extrinsic_;      // color frame is base frame
   rs_extrinsics color2fisheye_extrinsic_;  // color frame is base frame
@@ -77,7 +71,6 @@ protected:
   TimeSyncFilter time_sync_;
 
   // Queue of timestamps to sync everything to IMU clock.
-  mutable std::mutex timestamp_mutex_;
   std::deque<rs::timestamp_data> timestamp_queue_;
 
   // Member Functions.
@@ -93,7 +86,6 @@ protected:
   void getCameraExtrinsics();
   void publishStaticTransforms();
   void publishDynamicTransforms();
-  void publishIMU();
   void setStreams();
   void setIMUCallbacks();
   void setFrameCallbacks();
