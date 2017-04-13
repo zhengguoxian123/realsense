@@ -113,6 +113,11 @@ if(USE_SYSTEM_LIBREALSENSE)
   target_link_libraries(get_debug_info PRIVATE realsense::realsense)
 endif()
 
+add_executable(zr300_node src/zr300_node.cpp)
+target_link_libraries(zr300_node
+  ${catkin_LIBRARIES}
+)
+
 if (CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   find_package(roslint REQUIRED)
