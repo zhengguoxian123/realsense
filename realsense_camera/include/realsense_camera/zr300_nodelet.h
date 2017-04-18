@@ -42,6 +42,7 @@
 #include <realsense_camera/IMUInfo.h>
 #include <realsense_camera/GetIMUInfo.h>
 #include <realsense_camera/base_nodelet.h>
+#include <realsense_camera/time_sync.h>
 
 namespace realsense_camera
 {
@@ -58,19 +59,19 @@ protected:
   bool enable_imu_;
   std::string imu_frame_id_;
   std::string imu_optical_frame_id_;
-  geometry_msgs::Vector3 imu_angular_vel_;
-  geometry_msgs::Vector3 imu_linear_accel_;
-  double imu_ts_;
-  double prev_imu_ts_;
   ros::Publisher imu_publisher_;
-  boost::shared_ptr<boost::thread> imu_thread_;
   std::function<void(rs::motion_data)> motion_handler_;
   std::function<void(rs::timestamp_data)> timestamp_handler_;
-  std::mutex imu_mutex_;
 
   rs_extrinsics color2ir2_extrinsic_;      // color frame is base frame
   rs_extrinsics color2fisheye_extrinsic_;  // color frame is base frame
   rs_extrinsics color2imu_extrinsic_;      // color frame is base frame
+
+  // Time synchronizer.
+  TimeSyncFilter time_sync_;
+
+  // Queue of timestamps to sync everything to IMU clock.
+  std::deque<rs::timestamp_data> timestamp_queue_;
 
   // Member Functions.
   void getParameters();
@@ -85,12 +86,15 @@ protected:
   void getCameraExtrinsics();
   void publishStaticTransforms();
   void publishDynamicTransforms();
-  void publishIMU();
   void setStreams();
   void setIMUCallbacks();
   void setFrameCallbacks();
   std::function<void(rs::frame f)> fisheye_frame_handler_, ir2_frame_handler_;
   void stopIMU();
+  virtual ros::Time getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number);
+  bool findTimestamp(unsigned short sequence_number, rs_event_source source,
+      int* timestamp_imu, ros::Time* timestamp);
+
 };
 }  // namespace realsense_camera
 #endif  // REALSENSE_CAMERA_ZR300_NODELET_H

@@ -28,11 +28,13 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
+
 #include <string>
 #include <algorithm>
 #include <vector>
 #include <map>
 #include <realsense_camera/base_nodelet.h>
+#include <unistd.h>
 
 using cv::Mat;
 using cv::Scalar;
@@ -157,6 +159,7 @@ namespace realsense_camera
     pnh_.param("enable_color", enable_[RS_STREAM_COLOR], ENABLE_COLOR);
     pnh_.param("enable_ir", enable_[RS_STREAM_INFRARED], ENABLE_IR);
     pnh_.param("enable_pointcloud", enable_pointcloud_, ENABLE_PC);
+    pnh_.param("enforce_rgbd_sync", enforce_rgbd_sync_, ENFORCE_RGBD_SYNC);
     pnh_.param("enable_tf", enable_tf_, ENABLE_TF);
     pnh_.param("enable_tf_dynamic", enable_tf_dynamic_, ENABLE_TF_DYNAMIC);
     pnh_.param("tf_publication_rate", tf_publication_rate_, TF_PUBLICATION_RATE);
@@ -173,6 +176,11 @@ namespace realsense_camera
     pnh_.param("depth_optical_frame_id", optical_frame_id_[RS_STREAM_DEPTH], DEFAULT_DEPTH_OPTICAL_FRAME_ID);
     pnh_.param("color_optical_frame_id", optical_frame_id_[RS_STREAM_COLOR], DEFAULT_COLOR_OPTICAL_FRAME_ID);
     pnh_.param("ir_optical_frame_id", optical_frame_id_[RS_STREAM_INFRARED], DEFAULT_IR_OPTICAL_FRAME_ID);
+
+    pnh_.param("fisheye_subsample_fps", subsample_fps_[RS_STREAM_FISHEYE], 1);
+    pnh_.param("color_subsample_fps", subsample_fps_[RS_STREAM_COLOR], 1);
+    pnh_.param("depth_subsample_fps", subsample_fps_[RS_STREAM_DEPTH], 1);
+    pnh_.param("ir_subsample_fps", subsample_fps_[RS_STREAM_INFRARED], 1);
 
     // set IR stream to match depth
     width_[RS_STREAM_INFRARED] = width_[RS_STREAM_DEPTH];
@@ -590,6 +598,11 @@ namespace realsense_camera
     color_frame_handler_ = [&](rs::frame frame)  // NOLINT(build/c++11)
     {
       publishTopic(RS_STREAM_COLOR, frame);
+
+      if (enable_pointcloud_ == true)
+      {
+        publishPCTopic();
+      }
     };
 
     ir_frame_handler_ = [&](rs::frame frame)  // NOLINT(build/c++11)
@@ -854,7 +867,7 @@ namespace realsense_camera
   /*
    * Determine the timestamp for the publish topic.
    */
-  ros::Time BaseNodelet::getTimestamp(rs_stream stream_index, double frame_ts)
+  ros::Time BaseNodelet::getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number)
   {
     return ros::Time(camera_start_ts_) + ros::Duration(frame_ts * 0.001);
   }
@@ -868,8 +881,12 @@ namespace realsense_camera
     std::unique_lock<std::mutex> lock(frame_mutex_[stream_index]);
 
     double frame_ts = frame.get_timestamp();
-    if (ts_[stream_index] != frame_ts)  // Publish frames only if its not duplicate
+    // Publish frames only if its not duplicate
+    if (ts_[stream_index] != frame_ts &&
+       frame.get_frame_number() % subsample_fps_[stream_index] == 0)
     {
+      // Also update the sequence number.
+      sequence_ids_[stream_index] = frame.get_frame_number();
       setImageData(stream_index, frame);
       // Publish stream only if there is at least one subscriber.
       if (camera_publisher_[stream_index].getNumSubscribers() > 0)
@@ -879,7 +896,7 @@ namespace realsense_camera
                                 image_[stream_index]).toImageMsg();
         msg->header.frame_id = optical_frame_id_[stream_index];
         // Publish timestamp to synchronize frames.
-        msg->header.stamp = getTimestamp(stream_index, frame_ts);
+        msg->header.stamp = getTimestamp(stream_index, frame_ts, frame.get_frame_number());
         msg->width = image_[stream_index].cols;
         msg->height = image_[stream_index].rows;
         msg->is_bigendian = false;
@@ -887,8 +904,8 @@ namespace realsense_camera
         camera_info_ptr_[stream_index]->header.stamp = msg->header.stamp;
         camera_publisher_[stream_index].publish(msg, camera_info_ptr_[stream_index]);
       }
+      ts_[stream_index] = frame_ts;
     }
-    ts_[stream_index] = frame_ts;
   }
   catch(const rs::error & e)
   {
@@ -913,6 +930,15 @@ namespace realsense_camera
    */
   void BaseNodelet::publishPCTopic()
   {
+    // Make sure neither stream updates while we process the pointcloud.
+    std::unique_lock<std::mutex> lock_depth(frame_mutex_[RS_STREAM_DEPTH]);
+    std::unique_lock<std::mutex> lock_color(frame_mutex_[RS_STREAM_COLOR]);
+
+    // Check if the depth and rgb sequence numbers match; otherwise we're out
+    // of sync anyway.
+    if (enforce_rgbd_sync_ && sequence_ids_[RS_STREAM_COLOR] != sequence_ids_[RS_STREAM_DEPTH]) {
+      return;
+    }
     cv::Mat & image_color = image_[RS_STREAM_COLOR];
     // Publish pointcloud only if there is at least one subscriber.
     if (pointcloud_publisher_.getNumSubscribers() > 0 && rs_is_stream_enabled(rs_device_, RS_STREAM_DEPTH, 0) == 1)
@@ -936,7 +962,7 @@ namespace realsense_camera
       sensor_msgs::PointCloud2 msg_pointcloud;
       msg_pointcloud.width = width_[RS_STREAM_DEPTH];
       msg_pointcloud.height = height_[RS_STREAM_DEPTH];
-      msg_pointcloud.header.stamp = ros::Time::now();
+      msg_pointcloud.header.stamp = getTimestamp(RS_STREAM_DEPTH, ts_[RS_STREAM_DEPTH], sequence_ids_[RS_STREAM_DEPTH]);
       msg_pointcloud.is_dense = true;
 
       sensor_msgs::PointCloud2Modifier modifier(msg_pointcloud);
@@ -1269,7 +1295,7 @@ namespace realsense_camera
       // sleep for 1 second to ensure previous calls are completed
       sleep(1);
       // environ is the current environment from <unistd.h>
-      execvpe(argv[0], argv, environ);
+      //execvpe(argv[0], argv, environ);
 
       _exit(EXIT_FAILURE);  // exec never returns
     }
