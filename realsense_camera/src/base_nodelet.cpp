@@ -86,12 +86,6 @@ namespace realsense_camera
   {
     getParameters();
 
-    if (enable_[RS_STREAM_DEPTH] == false && enable_[RS_STREAM_COLOR] == false)
-    {
-      ROS_ERROR_STREAM(nodelet_name_ << " - None of the streams are enabled. Exiting!");
-      ros::shutdown();
-    }
-
     while (false == connectToCamera())  // Poll for camera and connect if found
     {
       ROS_INFO_STREAM(nodelet_name_ << " - Sleeping 5 seconds then retrying to connect");
@@ -848,15 +842,7 @@ namespace realsense_camera
     // Set flags
     if (enable_depth == false)
     {
-      if (enable_[RS_STREAM_COLOR] == false)
-      {
-        ROS_INFO_STREAM(nodelet_name_ << " - Color stream is also disabled. Cannot disable depth stream");
-        enable_depth = true;
-      }
-      else
-      {
-        enable_[RS_STREAM_DEPTH] = false;
-      }
+      enable_[RS_STREAM_DEPTH] = false;
     }
     else
     {
