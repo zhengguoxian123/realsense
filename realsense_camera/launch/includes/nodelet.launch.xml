@@ -30,6 +30,9 @@
     <param name="fisheye_optical_frame_id" type="str"  value="$(arg camera)_fisheye_optical_frame" />
     <param name="imu_optical_frame_id"     type="str"  value="$(arg camera)_imu_optical_frame" />
 
+    <param name="enable_pointcloud"  value="true" />
+
+
     <remap from="depth"    to="$(arg depth)" />
     <remap from="color"    to="$(arg rgb)" />
     <remap from="ir"       to="$(arg ir)" />

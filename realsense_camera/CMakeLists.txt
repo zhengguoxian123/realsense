@@ -9,10 +9,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # Set compile flags
 set(CMAKE_CXX_FLAGS "-fPIE -fPIC -std=c++11 -O2 -D_FORTIFY_SOURCE=2 -fstack-protector -Wformat -Wformat-security -Wall ${CMAKE_CXX_FLAGS}")
-# Flags executables
-set(CMAKE_EXE_LINKER_FLAGS "-pie -z noexecstack -z relro -z now")
-# Flags shared libraries
-set(CMAKE_SHARED_LINKER_FLAGS "-z noexecstack -z relro -z now ${CMAKE_SHARED_LINKER_FLAGS}")
+if(UNIX AND NOT APPLE)
+  # Flags executables
+  set(CMAKE_EXE_LINKER_FLAGS "-pie -z noexecstack -z relro -z now")
+  # Flags shared libraries
+  set(CMAKE_SHARED_LINKER_FLAGS "-z noexecstack -z relro -z now ${CMAKE_SHARED_LINKER_FLAGS}")
+endif()
 
 option(USE_SYSTEM_LIBREALSENSE "Build realsense_camera against system librealsense, not the one built with catkin" OFF)
 
@@ -98,7 +100,7 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}_nodelet src/base_nodelet.cpp src/sync_nodelet.cpp src/r200_nodelet.cpp src/f200_nodelet.cpp src/sr300_nodelet.cpp
-  src/zr300_nodelet.cpp)
+  src/zr300_nodelet.cpp src/time_sync.cpp)
 target_link_libraries(${PROJECT_NAME}_nodelet
   ${catkin_LIBRARIES}
 )
@@ -116,6 +118,11 @@ target_link_libraries(get_debug_info ${catkin_LIBRARIES})
 if(USE_SYSTEM_LIBREALSENSE)
   target_link_libraries(get_debug_info PRIVATE realsense::realsense)
 endif()
+
+add_executable(zr300_node src/zr300_node.cpp)
+target_link_libraries(zr300_node
+  ${catkin_LIBRARIES}
+)
 
 if (CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)

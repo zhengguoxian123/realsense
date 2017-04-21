@@ -118,6 +118,11 @@ protected:
   int unit_step_size_[STREAM_COUNT];
   int step_[STREAM_COUNT];
   double ts_[STREAM_COUNT];
+  // Sequence numbers (or frame IDs in the realsense frame, not TF) for images,
+  // for timestamp resolution and publishing.
+  int sequence_ids_[STREAM_COUNT];
+  // What factor to subsample the FPS by. INTEGER ONLY. Because it's easier.
+  int subsample_fps_[STREAM_COUNT] = {1};
   std::string frame_id_[STREAM_COUNT];
   std::string optical_frame_id_[STREAM_COUNT];
   cv::Mat image_[STREAM_COUNT] = {};
@@ -126,6 +131,7 @@ protected:
   std::string base_frame_id_;
   float max_z_ = -1.0f;
   bool enable_pointcloud_;
+  bool enforce_rgbd_sync_;
   bool enable_tf_;
   bool enable_tf_dynamic_;
   double tf_publication_rate_;
@@ -168,7 +174,7 @@ protected:
   virtual void disableStream(rs_stream stream_index);
   virtual std::string startCamera();
   virtual std::string stopCamera();
-  virtual ros::Time getTimestamp(rs_stream stream_index, double frame_ts);
+  virtual ros::Time getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number);
   virtual void publishTopic(rs_stream stream_index, rs::frame &  frame);
   virtual void setImageData(rs_stream stream_index, rs::frame &  frame);
   virtual void publishPCTopic();
