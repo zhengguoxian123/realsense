@@ -853,7 +853,8 @@ namespace realsense_camera
   /*
    * Determine the timestamp for the publish topic.
    */
-  ros::Time BaseNodelet::getTimestamp(rs_stream stream_index, double frame_ts, int sequence_number)
+  ros::Time BaseNodelet::getTimestamp(rs_stream stream_index, double frame_ts,
+                                      unsigned int sequence_number)
   {
     return ros::Time(camera_start_ts_) + ros::Duration(frame_ts * 0.001);
   }
