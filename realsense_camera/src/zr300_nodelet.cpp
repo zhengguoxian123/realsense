@@ -842,7 +842,7 @@ namespace realsense_camera
   }
 
   ros::Time ZR300Nodelet::getTimestamp(rs_stream stream_index, double frame_ts,
-                                       unsigned int sequence_number) {
+                                       uint64_t sequence_number) {
     ros::Time local_timestamp;
 
     if (stream_index == RS_STREAM_FISHEYE) {
@@ -855,9 +855,8 @@ namespace realsense_camera
     return local_timestamp;
   }
 
-  bool ZR300Nodelet::findTimestamp(unsigned int sequence_number, rs_event_source source,
+  bool ZR300Nodelet::findTimestamp(uint64_t sequence_number, rs_event_source source,
       int* timestamp_imu, ros::Time* timestamp) {
-    ROS_ERROR_STREAM(sequence_number);
     for (auto ts : timestamp_queue_) {
       if (ts.source_id == source && ts.frame_number == sequence_number) {
         if (timestamp_imu) {

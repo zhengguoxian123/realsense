@@ -120,7 +120,7 @@ protected:
   double ts_[STREAM_COUNT];
   // Sequence numbers (or frame IDs in the realsense frame, not TF) for images,
   // for timestamp resolution and publishing.
-  unsigned int sequence_ids_[STREAM_COUNT];
+  uint64_t sequence_ids_[STREAM_COUNT];
   // What factor to subsample the FPS by. INTEGER ONLY. Because it's easier.
   int subsample_fps_[STREAM_COUNT] = {1};
   std::string frame_id_[STREAM_COUNT];
@@ -175,7 +175,7 @@ protected:
   virtual std::string startCamera();
   virtual std::string stopCamera();
   virtual ros::Time getTimestamp(rs_stream stream_index, double frame_ts,
-                                 unsigned int sequence_number);
+                                 uint64_t sequence_number);
   virtual void publishTopic(rs_stream stream_index, rs::frame &  frame);
   virtual void setImageData(rs_stream stream_index, rs::frame &  frame);
   virtual void publishPCTopic();

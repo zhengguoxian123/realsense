@@ -91,8 +91,8 @@ protected:
   void setFrameCallbacks();
   std::function<void(rs::frame f)> fisheye_frame_handler_, ir2_frame_handler_;
   void stopIMU();
-  virtual ros::Time getTimestamp(rs_stream stream_index, double frame_ts, unsigned int sequence_number);
-  bool findTimestamp(unsigned int sequence_number, rs_event_source source,
+  virtual ros::Time getTimestamp(rs_stream stream_index, double frame_ts, uint64_t sequence_number);
+  bool findTimestamp(uint64_t sequence_number, rs_event_source source,
       int* timestamp_imu, ros::Time* timestamp);
 
 };
