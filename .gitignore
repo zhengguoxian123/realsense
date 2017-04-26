@@ -29,6 +29,9 @@ msg/_*.py
 .cproject
 .settings
 
+# vscode config
+.vscode/
+
 # qcreator stuff
 CMakeLists.txt.user
 *.workspace
