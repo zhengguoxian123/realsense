@@ -22,4 +22,11 @@
   Intel(R) RealSense(TM) ZR300 Camera nodelet.
   </description>
   </class>
+
+   <class name="realsense_camera/FilterAndPublish" type="realsense_camera::FilterAndPublish" base_class_type="nodelet::Nodelet">
+  <description>
+   Nodelet for applying a voxel grid filter to the realsense point cloud.
+  </description>
+  </class>
+
 </library>
