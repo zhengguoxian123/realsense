@@ -15,7 +15,7 @@ TimeSyncFilter::TimeSyncFilter() : is_initialized_(false) {
 double TimeSyncFilter::getLocalTimestamp(double device_time) {
   if (!is_initialized_) {
     std::cout << "[WARN]: Timesync filter not initialized yet! Hack "
-                 "initializing now.\n";
+                 "initializing now." << std::endl;
     double local_time = ros::Time::now().toSec();
     initialize(device_time, local_time);
   }
