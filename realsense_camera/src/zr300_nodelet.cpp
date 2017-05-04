@@ -857,7 +857,7 @@ namespace realsense_camera
 
   bool ZR300Nodelet::findTimestamp(uint64_t sequence_number, rs_event_source source,
       int* timestamp_imu, ros::Time* timestamp) {
-    for (auto ts : timestamp_queue_) {
+    for (const auto& ts : timestamp_queue_) {
       if (ts.source_id == source && ts.frame_number == sequence_number) {
         if (timestamp_imu) {
           *timestamp_imu = ts.timestamp;
@@ -874,8 +874,13 @@ namespace realsense_camera
         return true;
       }
     }
-    ROS_WARN("Looking for sequence number: %d, could not find it as first and last are %llu and %llu",
-      sequence_number, timestamp_queue_.front().frame_number, timestamp_queue_.back().frame_number);
+    if (!timestamp_queue_.empty()) {
+      ROS_WARN("Looking for sequence number: %llu, could not find it as first and last are %llu and %llu",
+        sequence_number, timestamp_queue_.front().frame_number, timestamp_queue_.back().frame_number);
+    } else {
+      ROS_WARN("Looking for sequence number: %llu, could not find it as timestamp queue is empty.",
+        sequence_number);
+    }
     return false;
   }
 
