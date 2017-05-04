@@ -580,7 +580,7 @@ namespace realsense_camera
         auto now = std::chrono::system_clock::now().time_since_epoch();
         auto sys_time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 
-        ROS_DEBUG_STREAM(" - TimeEvent, host time " << sys_time
+        ROS_INFO_STREAM(" - TimeEvent, host time " << sys_time
             << "\ttimestamp: " << std::setprecision(8) << (double)entry.timestamp*MILLISECONDS_TO_SECONDS
             << "\tsource: " << (rs::event)entry.source_id
             << "\tframe_num: " << entry.frame_number);
