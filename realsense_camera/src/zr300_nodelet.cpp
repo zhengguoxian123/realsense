@@ -547,10 +547,8 @@ namespace realsense_camera
         imu_angular_vel.y = entry.axes[1];
         imu_angular_vel.z = entry.axes[2];
 
-        // Update time translation filter
+        // Update time translation filter, only with gyro timestamps
         device_time_translator_->update(static_cast<std::uint64_t>(entry.timestamp_data.timestamp * MILLISECONDS_TO_NANOSECONDS), time_now); // get nanosecond precision
-
-
 
         //send IMU data
         sensor_msgs::Imu imu_msg = sensor_msgs::Imu();
