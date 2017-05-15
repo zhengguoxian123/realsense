@@ -80,6 +80,9 @@ namespace realsense_camera
     unit_step_size_[RS_STREAM_FISHEYE] = sizeof(unsigned char);
 
     max_z_ = ZR300_MAX_Z;
+    device_time_translator_.reset(new cuckoo_time_translator::UnwrappedDeviceTimeTranslator(cuckoo_time_translator::ClockParameters(SECONDS_TO_NANOSECONDS),
+                                  getPrivateNodeHandle().getNamespace(),
+                                  cuckoo_time_translator::Defaults().setFilterAlgorithm(cuckoo_time_translator::FilterAlgorithm::ConvexHull)));
 
     BaseNodelet::onInit();
   }
@@ -535,6 +538,7 @@ namespace realsense_camera
   {
     motion_handler_ = [&](rs::motion_data entry)  // NOLINT(build/c++11)
     {
+      ros::Time time_now = ros::Time::now();
       static geometry_msgs::Vector3 imu_linear_accel;
       if (entry.timestamp_data.source_id == RS_EVENT_IMU_GYRO)
       {
@@ -542,12 +546,21 @@ namespace realsense_camera
         imu_angular_vel.x = entry.axes[0];
         imu_angular_vel.y = entry.axes[1];
         imu_angular_vel.z = entry.axes[2];
-        // Only update timestamp on gyro!
-        double imu_ts_device_time = static_cast<double>(entry.timestamp_data.timestamp) * MILLISECONDS_TO_SECONDS;
+
+        // Update time translation filter, only with gyro timestamps
+        device_time_translator_->update(static_cast<std::uint64_t>(entry.timestamp_data.timestamp * MILLISECONDS_TO_NANOSECONDS), time_now); // get nanosecond precision
 
         //send IMU data
         sensor_msgs::Imu imu_msg = sensor_msgs::Imu();
-        imu_msg.header.stamp = ros::Time(time_sync_.getLocalTimestamp(imu_ts_device_time));
+        if (device_time_translator_->isReadyToTranslate())
+        {
+          imu_msg.header.stamp = device_time_translator_->translate(entry.timestamp_data.timestamp * MILLISECONDS_TO_NANOSECONDS);
+        }
+        else
+        {
+          ROS_WARN("device_time_translator is not ready yet, using ros::Time::now()");
+          imu_msg.header.stamp = ros::Time::now();
+        }
         imu_msg.header.frame_id = imu_optical_frame_id_;
 
         // Setting just the first element to -1.0 because device does not give orientation data
@@ -585,17 +598,10 @@ namespace realsense_camera
             << "\tsource: " << (rs::event)entry.source_id
             << "\tframe_num: " << entry.frame_number);
 
-        // Time sync output for profit.
-        double time_now = ros::Time::now().toSec();
-
-        if (!time_sync_.isInitialized() ||
-            (rs::event)entry.source_id == rs::event::event_imu_depth_cam ||
+        if ((rs::event)entry.source_id == rs::event::event_imu_depth_cam ||
             (rs::event)entry.source_id == rs::event::event_imu_motion_cam) {
-          // TODO: check if this is correct -- should we keep first timestamp
-          // checks outside?
-          time_sync_.updateFilter(
-              static_cast<double>(entry.timestamp) * MILLISECONDS_TO_SECONDS,
-              time_now);
+          // Time translator get updated in the motion handler using the gyro hardware timestamp
+          // So the filter initialisation check is no longer needed
 
           timestamp_queue_.push_back(entry);
           while (timestamp_queue_.size() >= TIMESTAMP_QUEUE_MAX_SIZE) {
@@ -863,22 +869,30 @@ namespace realsense_camera
           *timestamp_imu = ts.timestamp;
         }
         if (timestamp) {
-          double device_time =
-              static_cast<double>(ts.timestamp) * MILLISECONDS_TO_SECONDS;
-          ros::Time local_time;
-          double local_timestamp;
-          local_timestamp = time_sync_.getLocalTimestamp(device_time);
-          local_time.fromSec(local_timestamp);
-          *timestamp = local_time;
+          if (device_time_translator_->isReadyToTranslate()) {
+            *timestamp = device_time_translator_->translate(ts.timestamp * MILLISECONDS_TO_NANOSECONDS);
+            ROS_DEBUG_STREAM(" - HW timestamp: "
+                             << std::setw(8) << std::setprecision(8)
+                             << (double)ts.timestamp * MILLISECONDS_TO_SECONDS
+                             << "\t Translated timestamp: " << std::setw(16)
+                             << std::setprecision(16) << timestamp->toSec()
+                             << "\tsource: " << (rs::event)ts.source_id
+                             << "\tframe_num: " << ts.frame_number);
+          } else {
+            ROS_WARN("device_time_translator is not ready yet, using ros::Time::now()");
+            *timestamp = ros::Time::now();
+          }
         }
-        return true;
+          return true;
+        }
       }
-    }
-    if (!timestamp_queue_.empty()) {
-      ROS_WARN("Looking for sequence number: %llu, could not find it as first and last are %llu and %llu",
-        sequence_number, timestamp_queue_.front().frame_number, timestamp_queue_.back().frame_number);
+      if (!timestamp_queue_.empty()) {
+        ROS_WARN("Looking for sequence number: %" PRIu64 ", could not find it as "
+                 "first and last are %llu and %llu",
+                 sequence_number, timestamp_queue_.front().frame_number,
+                 timestamp_queue_.back().frame_number);
     } else {
-      ROS_WARN("Looking for sequence number: %llu, could not find it as timestamp queue is empty.",
+      ROS_WARN("Looking for sequence number: %" PRIu64 ", could not find it as timestamp queue is empty.",
         sequence_number);
     }
     return false;
