@@ -885,8 +885,6 @@ namespace realsense_camera
           return true;
         }
       }
-
-    }
       if (!timestamp_queue_.empty()) {
         ROS_WARN("Looking for sequence number: %" PRIu64 ", could not find it as "
                  "first and last are %llu and %llu",
