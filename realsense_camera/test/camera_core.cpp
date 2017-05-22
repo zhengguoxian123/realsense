@@ -98,7 +98,7 @@ void getCameraInfo(rs_stream stream, const sensor_msgs::CameraInfoConstPtr &info
 
 void imageInfrared1Callback(const sensor_msgs::ImageConstPtr &msg, const sensor_msgs::CameraInfoConstPtr &info_msg)
 {
-  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::TYPE_8UC1)->image;
+  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::MONO8)->image;
 
   uchar *infrared1_data = image.data;
 
@@ -131,7 +131,7 @@ void imageInfrared1Callback(const sensor_msgs::ImageConstPtr &msg, const sensor_
 
 void imageInfrared2Callback(const sensor_msgs::ImageConstPtr &msg, const sensor_msgs::CameraInfoConstPtr &info_msg)
 {
-  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::TYPE_8UC1)->image;
+  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::MONO8)->image;
 
   uchar *infrared2_data = image.data;
 
@@ -164,7 +164,7 @@ void imageInfrared2Callback(const sensor_msgs::ImageConstPtr &msg, const sensor_
 
 void imageDepthCallback(const sensor_msgs::ImageConstPtr &msg, const sensor_msgs::CameraInfoConstPtr &info_msg)
 {
-  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::TYPE_16UC1)->image;
+  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::MONO16)->image;
   uint16_t *image_data = reinterpret_cast<uint16_t *>(image.data);
 
   double depth_total = 0;
@@ -228,7 +228,7 @@ void imageColorCallback(const sensor_msgs::ImageConstPtr &msg, const sensor_msgs
 
 void imageFisheyeCallback(const sensor_msgs::ImageConstPtr &msg, const sensor_msgs::CameraInfoConstPtr &info_msg)
 {
-  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::TYPE_8UC1)->image;
+  cv::Mat image = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::MONO8)->image;
 
   uchar *fisheye_data = image.data;
 
