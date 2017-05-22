@@ -30,6 +30,7 @@ set(REALSENSE_CATKIN_BASED_DEPS
   std_msgs
   sensor_msgs
   pcl_ros
+  cuckoo_time_translator
 )
 
 if(USE_SYSTEM_LIBREALSENSE)

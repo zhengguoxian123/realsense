@@ -33,6 +33,7 @@
   <depend>pcl_ros</depend>
   <depend>dynamic_reconfigure</depend>
   <depend>boost</depend>
+  <depend>cuckoo_time_translator</depend>
 
   <exec_depend>rgbd_launch</exec_depend>
 

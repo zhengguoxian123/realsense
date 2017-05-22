@@ -34,6 +34,7 @@
 
 #include <string>
 #include <vector>
+#include <inttypes.h>
 
 #include <dynamic_reconfigure/server.h>
 #include <sensor_msgs/Imu.h>
@@ -42,7 +43,7 @@
 #include <realsense_camera/IMUInfo.h>
 #include <realsense_camera/GetIMUInfo.h>
 #include <realsense_camera/base_nodelet.h>
-#include <realsense_camera/time_sync.h>
+#include <cuckoo_time_translator/DeviceTimeTranslator.h>
 
 namespace realsense_camera
 {
@@ -67,8 +68,8 @@ protected:
   rs_extrinsics color2fisheye_extrinsic_;  // color frame is base frame
   rs_extrinsics color2imu_extrinsic_;      // color frame is base frame
 
-  // Time synchronizer.
-  TimeSyncFilter time_sync_;
+  // Cuckoo Time translator object.
+  std::unique_ptr<cuckoo_time_translator::UnwrappedDeviceTimeTranslator> device_time_translator_;
 
   // Queue of timestamps to sync everything to IMU clock.
   std::deque<rs::timestamp_data> timestamp_queue_;
