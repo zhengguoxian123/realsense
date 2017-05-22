@@ -47,12 +47,12 @@ namespace realsense_camera
     unit_step_size_[RS_STREAM_COLOR] = sizeof(unsigned char) * 3;
 
     format_[RS_STREAM_DEPTH] = RS_FORMAT_Z16;
-    encoding_[RS_STREAM_DEPTH] = sensor_msgs::image_encodings::TYPE_16UC1;
+    encoding_[RS_STREAM_DEPTH] = sensor_msgs::image_encodings::MONO16;
     cv_type_[RS_STREAM_DEPTH] = CV_16UC1;
     unit_step_size_[RS_STREAM_DEPTH] = sizeof(uint16_t);
 
     format_[RS_STREAM_INFRARED] = RS_FORMAT_Y16;
-    encoding_[RS_STREAM_INFRARED] = sensor_msgs::image_encodings::TYPE_16UC1;
+    encoding_[RS_STREAM_INFRARED] = sensor_msgs::image_encodings::MONO16;
     cv_type_[RS_STREAM_INFRARED] = CV_16UC1;
     unit_step_size_[RS_STREAM_INFRARED] = sizeof(uint16_t);
 

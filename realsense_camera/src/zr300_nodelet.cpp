@@ -27,9 +27,8 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
-
-#include <string>
 #include <algorithm>
+#include <string>
 #include <vector>
 
 #include <realsense_camera/zr300_nodelet.h>
@@ -60,22 +59,22 @@ namespace realsense_camera
     unit_step_size_[RS_STREAM_COLOR] = sizeof(unsigned char) * 3;
 
     format_[RS_STREAM_DEPTH] = RS_FORMAT_Z16;
-    encoding_[RS_STREAM_DEPTH] = sensor_msgs::image_encodings::TYPE_16UC1;
+    encoding_[RS_STREAM_DEPTH] = sensor_msgs::image_encodings::MONO16;
     cv_type_[RS_STREAM_DEPTH] = CV_16UC1;
     unit_step_size_[RS_STREAM_DEPTH] = sizeof(uint16_t);
 
     format_[RS_STREAM_INFRARED] = RS_FORMAT_Y8;
-    encoding_[RS_STREAM_INFRARED] = sensor_msgs::image_encodings::TYPE_8UC1;
+    encoding_[RS_STREAM_INFRARED] = sensor_msgs::image_encodings::MONO8;
     cv_type_[RS_STREAM_INFRARED] = CV_8UC1;
     unit_step_size_[RS_STREAM_INFRARED] = sizeof(unsigned char);
 
     format_[RS_STREAM_INFRARED2] = RS_FORMAT_Y8;
-    encoding_[RS_STREAM_INFRARED2] = sensor_msgs::image_encodings::TYPE_8UC1;
+    encoding_[RS_STREAM_INFRARED2] = sensor_msgs::image_encodings::MONO8;
     cv_type_[RS_STREAM_INFRARED2] = CV_8UC1;
     unit_step_size_[RS_STREAM_INFRARED2] = sizeof(unsigned char);
 
     format_[RS_STREAM_FISHEYE] = RS_FORMAT_RAW8;
-    encoding_[RS_STREAM_FISHEYE] = sensor_msgs::image_encodings::TYPE_8UC1;
+    encoding_[RS_STREAM_FISHEYE] = sensor_msgs::image_encodings::MONO8;
     cv_type_[RS_STREAM_FISHEYE] = CV_8UC1;
     unit_step_size_[RS_STREAM_FISHEYE] = sizeof(unsigned char);
 
@@ -875,11 +874,13 @@ namespace realsense_camera
       }
     }
     if (!timestamp_queue_.empty()) {
-      ROS_WARN("Looking for sequence number: %llu, could not find it as first and last are %llu and %llu",
-        sequence_number, timestamp_queue_.front().frame_number, timestamp_queue_.back().frame_number);
+      ROS_WARN_STREAM("Looking for sequence number: " << sequence_number <<
+                      " could not find it as first and last are " <<
+                      timestamp_queue_.front().frame_number << " and " <<
+                      timestamp_queue_.back().frame_number);
     } else {
-      ROS_WARN("Looking for sequence number: %llu, could not find it as timestamp queue is empty.",
-        sequence_number);
+      ROS_WARN_STREAM("Looking for sequence number: " << sequence_number <<
+                      " could not find it as timestamp queue is empty.");
     }
     return false;
   }
