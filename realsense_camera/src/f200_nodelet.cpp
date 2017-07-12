@@ -48,7 +48,7 @@ namespace realsense_camera
     unit_step_size_[RS_STREAM_COLOR] = sizeof(unsigned char) * 3;
 
     format_[RS_STREAM_DEPTH] = RS_FORMAT_Z16;
-    encoding_[RS_STREAM_DEPTH] = sensor_msgs::image_encodings::MONO16;
+    encoding_[RS_STREAM_DEPTH] = sensor_msgs::image_encodings::TYPE_16UC1;
     cv_type_[RS_STREAM_DEPTH] = CV_16UC1;
     unit_step_size_[RS_STREAM_DEPTH] = sizeof(uint16_t);
 
