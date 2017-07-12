@@ -1,0 +1,21 @@
+<!-- Sample launch file for running rovio using RealSense ZR300 camera with default configurations.Run zr300_nodelet_default.launch first and let the cuckoo_time_translator run for aabout 10-20 secs. -->
+<launch>
+  <arg name="camera"       default="camera" />
+  <arg name="sensor_name"      default="intel3" />
+
+  <group ns="$(arg camera)">
+    <node name="rovio" pkg="rovio" type="rovio_node" output="screen">
+      <param name="filter_config" value="$(find mav_startup)/parameters/sensors/$(arg sensor_name)/rovio_test.info_new" />
+      <param name="camera0_config" value="$(find mav_startup)/parameters/sensors/$(arg sensor_name)/rovio_came.yaml" /> 
+      <remap from="cam0/image_raw" to="fisheye/image_raw"/>
+      <remap from="imu0" to="imu/data_raw"/>
+      <param name="world_frame" value="odom"/>
+      <param name="capability_group" value="Rovio" />
+    </node>
+
+  </group>
+
+
+    
+
+</launch>

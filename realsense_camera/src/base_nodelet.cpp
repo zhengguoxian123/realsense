@@ -889,7 +889,10 @@ namespace realsense_camera
         msg->is_bigendian = false;
         msg->step = step_[stream_index];
         camera_info_ptr_[stream_index]->header.stamp = msg->header.stamp;
-        camera_publisher_[stream_index].publish(msg, camera_info_ptr_[stream_index]);
+        if(msg->header.stamp.toSec()!=0)
+        {
+          camera_publisher_[stream_index].publish(msg, camera_info_ptr_[stream_index]);
+        }
       }
       ts_[stream_index] = frame_ts;
     }

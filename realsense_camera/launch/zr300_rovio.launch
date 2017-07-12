@@ -1,10 +1,12 @@
 <!-- Sample launch file for using RealSense ZR300 camera with default configurations -->
 <launch>
+  <arg name="mav_name" default="raven"/>
   <arg name="camera"       default="camera" />
   <arg name="camera_type"  default="ZR300" /> <!-- Type of camera -->
   <arg name="serial_no"    default="" />
   <arg name="usb_port_id"  default="" /> <!-- USB "Bus#-Port#" -->
   <arg name="manager"      default="nodelet_manager" />
+  <arg name="sensor_name"      default="intel3" />
 
   <!-- These 'arg' tags are just place-holders for passing values from test files.
   The recommended way is to pass the values directly into the 'param' tags. -->
@@ -15,7 +17,6 @@
   <arg name="fisheye_strobe"    default="1" />
   <arg name="fisheye_external_trigger"    default="1" />
   <arg name="enable_imu"    default="true" />
-  <arg name="enable_ir"    default="false" />
 
 
   <param name="$(arg camera)/driver/mode"              type="str"  value="$(arg mode)" />
@@ -25,11 +26,7 @@
   <param name="$(arg camera)/driver/fisheye_strobe"    type="int"  value="$(arg fisheye_strobe)" />
   <param name="$(arg camera)/driver/fisheye_external_trigger"    type="int"  value="$(arg fisheye_external_trigger)" />
   <param name="$(arg camera)/driver/enable_imu"     value="$(arg enable_imu)" />
-  <param name="$(arg camera)/driver/enable_ir"     value="$(arg enable_ir)" />
-  <param name="$(arg camera)/driver/depth_width"     type="int" value="640" />
-  <param name="$(arg camera)/driver/depth_height"     type="int" value="480" />
-  <param name="$(arg camera)/driver/enable_depth"     type="bool" value="false" />
-
+  <param name="$(arg camera)/driver/enable_depth"     value="false" />
   <!-- Refer to the Wiki http://wiki.ros.org/realsense_camera for list of supported parameters -->
 
   <group ns="$(arg camera)">
@@ -42,5 +39,10 @@
       <arg name="serial_no"    value="$(arg serial_no)" />
       <arg name="usb_port_id"  value="$(arg usb_port_id)" />
     </include>
+
   </group>
+
+
+    
+
 </launch>
