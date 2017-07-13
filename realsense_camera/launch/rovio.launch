@@ -5,7 +5,7 @@
 
   <group ns="$(arg camera)">
     <node name="rovio" pkg="rovio" type="rovio_node" output="screen">
-      <param name="filter_config" value="$(find mav_startup)/parameters/sensors/$(arg sensor_name)/rovio_test.info_new" />
+      <param name="filter_config" value="$(find mav_startup)/parameters/sensors/$(arg sensor_name)/rovio_filter.info" />
       <param name="camera0_config" value="$(find mav_startup)/parameters/sensors/$(arg sensor_name)/rovio_came.yaml" /> 
       <remap from="cam0/image_raw" to="fisheye/image_raw"/>
       <remap from="imu0" to="imu/data_raw"/>
