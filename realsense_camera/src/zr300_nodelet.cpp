@@ -97,6 +97,7 @@ namespace realsense_camera
     pnh_.param("enable_fisheye", enable_[RS_STREAM_FISHEYE], ENABLE_FISHEYE);
     pnh_.param("enable_imu", enable_imu_, ENABLE_IMU);
     pnh_.param("enable_ir2", enable_[RS_STREAM_INFRARED2], ENABLE_IR2);
+    pnh_.param("ir2_subsample_fps", subsample_fps_[RS_STREAM_INFRARED2], 1);
     pnh_.param("fisheye_width", width_[RS_STREAM_FISHEYE], FISHEYE_WIDTH);
     pnh_.param("fisheye_height", height_[RS_STREAM_FISHEYE], FISHEYE_HEIGHT);
     pnh_.param("fisheye_fps", fps_[RS_STREAM_FISHEYE], FISHEYE_FPS);
