@@ -5,13 +5,12 @@
 echo "Usage : source $0 \"README Text\""
 
 CURR_DIR=`pwd`
-FOLDER_NAME="~/bags/$(date +"%Y%m%d")"
-
+FOLDER_NAME="/home/flourish/bags/$(date +"%Y%m%d")"
+echo $FOLDER_NAME
 mkdir -p $FOLDER_NAME
 cd $FOLDER_NAME
 touch README
 rosparam dump "$(date +"%F-%H-%M-%S")".yaml
-
 BAG_NAME="$(date +"%F-%H-%M-%S").bag"
 echo $BAG_NAME >> README
 echo $1 >> README
@@ -30,4 +29,4 @@ read text
 echo $text >> README
 echo -e "\n" >> README
 rosbag info $BAG_NAME
-cd CURR_DIR
+cd $CURR_DIR
