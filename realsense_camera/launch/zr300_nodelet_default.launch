@@ -15,7 +15,6 @@
   <arg name="fisheye_strobe"    default="1" />
   <arg name="fisheye_external_trigger"    default="1" />
   <arg name="enable_imu"    default="true" />
-  <arg name="enable_ir"    default="false" />
 
 
   <param name="$(arg camera)/driver/mode"              type="str"  value="$(arg mode)" />
@@ -25,10 +24,13 @@
   <param name="$(arg camera)/driver/fisheye_strobe"    type="int"  value="$(arg fisheye_strobe)" />
   <param name="$(arg camera)/driver/fisheye_external_trigger"    type="int"  value="$(arg fisheye_external_trigger)" />
   <param name="$(arg camera)/driver/enable_imu"     value="$(arg enable_imu)" />
-  <param name="$(arg camera)/driver/enable_ir"     value="$(arg enable_ir)" />
   <param name="$(arg camera)/driver/depth_width"     type="int" value="640" />
   <param name="$(arg camera)/driver/depth_height"     type="int" value="480" />
+  <param name="$(arg camera)/driver/color_width"     type="int" value="640" />
+  <param name="$(arg camera)/driver/color_height"     type="int" value="480" />
   <param name="$(arg camera)/driver/enable_depth"     type="bool" value="false" />
+  <param name="$(arg camera)/driver/enable_ir"     type="bool" value="true" />
+  <param name="$(arg camera)/driver/enable_ir2"     type="bool" value="true" />
 
   <!-- Refer to the Wiki http://wiki.ros.org/realsense_camera for list of supported parameters -->
 
