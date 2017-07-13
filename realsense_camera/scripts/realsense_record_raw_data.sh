@@ -5,8 +5,7 @@
 echo "Usage : source $0 \"README Text\""
 
 CURR_DIR=`pwd`
-FOLDER_NAME="/home/flourish/bags/$(date +"%Y%m%d")"
-echo $FOLDER_NAME
+FOLDER_NAME="/home/$USER/bags/$(date +"%Y%m%d")"
 mkdir -p $FOLDER_NAME
 cd $FOLDER_NAME
 touch README
