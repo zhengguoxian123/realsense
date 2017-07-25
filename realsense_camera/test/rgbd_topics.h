@@ -34,12 +34,14 @@
 
 #include <string>
 
+#include <stdlib.h>     /* atoi */
 #include <sensor_msgs/image_encodings.h>
 #include <camera_info_manager/camera_info_manager.h>
 #include <std_msgs/String.h>
 #include <ros/ros.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <gtest/gtest.h>
+
 
 static const int TOPIC_COUNT = 13;
 
